@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n/context";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -33,6 +33,38 @@ export default function AdminWorkOrderDetailPage() {
   const [updating, setUpdating] = useState(false);
   const [statusNote, setStatusNote] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [resetPwResult, setResetPwResult] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+
+  // Local form state for editable fields (manual save)
+  interface FormState {
+    progressPercentage: number;
+    priority: string;
+    dueDate: string;
+    assignedStaffId: string;
+    salesRepId: string;
+    description: string;
+  }
+  const [formState, setFormState] = useState<FormState>({
+    progressPercentage: 0,
+    priority: "MEDIUM",
+    dueDate: "",
+    assignedStaffId: "",
+    salesRepId: "",
+    description: "",
+  });
+
+  const initFormFromOrder = useCallback((o: Record<string, unknown>) => {
+    setFormState({
+      progressPercentage: (o.progressPercentage as number) || 0,
+      priority: (o.priority as string) || "MEDIUM",
+      dueDate: o.dueDate ? (o.dueDate as string).split("T")[0] : "",
+      assignedStaffId: (o.assignedStaffId as string) || "",
+      salesRepId: (o.salesRepId as string) || "",
+      description: (o.description as string) || "",
+    });
+  }, []);
 
   const fetchOrder = useCallback(async () => {
     try {
@@ -40,17 +72,69 @@ export default function AdminWorkOrderDetailPage() {
       const data = await res.json();
       if (data.success) {
         setOrder(data.data);
+        initFormFromOrder(data.data);
         setStaff(data.staff || []);
         setSalesReps(data.salesReps || []);
       }
     } finally {
       setLoading(false);
     }
-  }, [params.id]);
+  }, [params.id, initFormFromOrder]);
 
   useEffect(() => {
     fetchOrder();
   }, [fetchOrder]);
+
+  // Dirty check
+  const isDirty = useMemo(() => {
+    if (!order) return false;
+    const origDueDate = order.dueDate
+      ? (order.dueDate as string).split("T")[0]
+      : "";
+    return (
+      formState.progressPercentage !==
+        ((order.progressPercentage as number) || 0) ||
+      formState.priority !== ((order.priority as string) || "MEDIUM") ||
+      formState.dueDate !== origDueDate ||
+      formState.assignedStaffId !== ((order.assignedStaffId as string) || "") ||
+      formState.salesRepId !== ((order.salesRepId as string) || "") ||
+      formState.description !== ((order.description as string) || "")
+    );
+  }, [formState, order]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const body: Record<string, unknown> = {
+        progressPercentage: formState.progressPercentage,
+        priority: formState.priority,
+        dueDate: formState.dueDate
+          ? new Date(formState.dueDate).toISOString()
+          : null,
+        assignedStaffId: formState.assignedStaffId || null,
+        salesRepId: formState.salesRepId || null,
+        description: formState.description,
+      };
+      const res = await fetch(`/api/admin/workorder/${params.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOrder(data.data);
+        initFormFromOrder(data.data);
+        setSaveMsg(t("admin.detail.saveSuccess"));
+        setTimeout(() => setSaveMsg(null), 3000);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDiscard = () => {
+    if (order) initFormFromOrder(order);
+  };
 
   const handleStatusUpdate = async (newStatus: string) => {
     setUpdating(true);
@@ -68,20 +152,6 @@ export default function AdminWorkOrderDetailPage() {
       }
     } finally {
       setUpdating(false);
-    }
-  };
-
-  const handleFieldUpdate = async (field: string, value: unknown) => {
-    try {
-      const res = await fetch(`/api/admin/workorder/${params.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: value }),
-      });
-      const data = await res.json();
-      if (data.success) setOrder(data.data);
-    } catch {
-      /* ignore */
     }
   };
 
@@ -213,6 +283,35 @@ export default function AdminWorkOrderDetailPage() {
             </div>
           )}
 
+          {/* Unsaved changes bar */}
+          {isDirty && (
+            <div className="sticky top-16 z-10 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 shadow-sm">
+              <span className="text-sm font-medium text-amber-800">
+                {t("admin.detail.unsavedChanges")}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleDiscard}
+                  className="btn-secondary text-sm"
+                >
+                  {t("admin.detail.discard")}
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="btn-primary text-sm"
+                >
+                  {saving ? t("common.loading") : t("common.save")}
+                </button>
+              </div>
+            </div>
+          )}
+          {saveMsg && (
+            <div className="rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+              {saveMsg}
+            </div>
+          )}
+
           {/* Editable Fields */}
           <div className="card">
             <h3 className="text-sm font-medium text-gray-500 mb-4">
@@ -227,12 +326,12 @@ export default function AdminWorkOrderDetailPage() {
                   type="number"
                   min={0}
                   max={100}
-                  value={order.progressPercentage as number}
+                  value={formState.progressPercentage}
                   onChange={(e) =>
-                    handleFieldUpdate(
-                      "progressPercentage",
-                      parseInt(e.target.value),
-                    )
+                    setFormState((prev) => ({
+                      ...prev,
+                      progressPercentage: parseInt(e.target.value) || 0,
+                    }))
                   }
                   className="input-field"
                 />
@@ -242,9 +341,12 @@ export default function AdminWorkOrderDetailPage() {
                   {t("admin.workorderForm.priority")}
                 </label>
                 <select
-                  value={order.priority as string}
+                  value={formState.priority}
                   onChange={(e) =>
-                    handleFieldUpdate("priority", e.target.value)
+                    setFormState((prev) => ({
+                      ...prev,
+                      priority: e.target.value,
+                    }))
                   }
                   className="input-field"
                 >
@@ -260,16 +362,12 @@ export default function AdminWorkOrderDetailPage() {
                 </label>
                 <input
                   type="date"
-                  value={
-                    order.dueDate ? (order.dueDate as string).split("T")[0] : ""
-                  }
+                  value={formState.dueDate}
                   onChange={(e) =>
-                    handleFieldUpdate(
-                      "dueDate",
-                      e.target.value
-                        ? new Date(e.target.value).toISOString()
-                        : null,
-                    )
+                    setFormState((prev) => ({
+                      ...prev,
+                      dueDate: e.target.value,
+                    }))
                   }
                   className="input-field"
                 />
@@ -279,9 +377,12 @@ export default function AdminWorkOrderDetailPage() {
                   {t("admin.workorderForm.assignedStaff")}
                 </label>
                 <select
-                  value={(order.assignedStaffId as string) || ""}
+                  value={formState.assignedStaffId}
                   onChange={(e) =>
-                    handleFieldUpdate("assignedStaffId", e.target.value || null)
+                    setFormState((prev) => ({
+                      ...prev,
+                      assignedStaffId: e.target.value,
+                    }))
                   }
                   className="input-field"
                 >
@@ -300,9 +401,12 @@ export default function AdminWorkOrderDetailPage() {
                   {t("admin.workorderForm.salesRep")}
                 </label>
                 <select
-                  value={(order.salesRepId as string) || ""}
+                  value={formState.salesRepId}
                   onChange={(e) =>
-                    handleFieldUpdate("salesRepId", e.target.value || null)
+                    setFormState((prev) => ({
+                      ...prev,
+                      salesRepId: e.target.value,
+                    }))
                   }
                   className="input-field"
                 >
@@ -325,13 +429,13 @@ export default function AdminWorkOrderDetailPage() {
               {t("admin.workorderForm.description")}
             </h3>
             <textarea
-              defaultValue={(order.description as string) || ""}
-              onBlur={(e) => {
-                const val = e.target.value;
-                if (val !== (order.description || "")) {
-                  handleFieldUpdate("description", val);
-                }
-              }}
+              value={formState.description}
+              onChange={(e) =>
+                setFormState((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
               className="input-field resize-none"
               rows={4}
               placeholder={t("admin.workorderForm.description")}
@@ -423,9 +527,9 @@ export default function AdminWorkOrderDetailPage() {
                   });
                   const data = await res.json();
                   if (data.success) {
-                    alert(
-                      `${t("admin.detail.passwordResetSuccess")}\n\n${t("admin.detail.newPassword")}: ${pw}`,
-                    );
+                    navigator.clipboard.writeText(pw).catch(() => {});
+                    setResetPwResult(pw);
+                    setTimeout(() => setResetPwResult(null), 10000);
                   }
                 } catch {
                   /* ignore */
@@ -435,6 +539,21 @@ export default function AdminWorkOrderDetailPage() {
             >
               {t("admin.detail.resetPassword")}
             </button>
+            {resetPwResult && (
+              <div className="mt-2 rounded-lg bg-green-50 p-3 text-sm">
+                <p className="text-green-700 font-medium">
+                  {t("admin.detail.passwordResetSuccess")}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="font-mono font-bold text-green-900">
+                    {resetPwResult}
+                  </span>
+                  <span className="text-xs text-green-600">
+                    {t("common.copied")}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Metadata */}

@@ -111,8 +111,36 @@ export default function AdminGuidePage() {
           <div className="text-sm text-gray-600 space-y-2">
             <p>
               {isZh
-                ? '在工单详情页的"客户"信息卡片中，点击"重置密码"按钮即可生成新的随机密码。系统会显示新密码，请将其告知客户。'
-                : 'On the work order detail page, in the "Client" info card, click "Reset Password" to generate a new random password. The system displays the new password - share it with the client.'}
+                ? '在工单详情页的"客户"信息卡片中，点击"重置密码"按钮即可生成新的随机密码。新密码会自动复制到剪贴板，同时页面会显示新密码。'
+                : 'On the work order detail page, in the "Client" info card, click "Reset Password" to generate a new random password. The new password is automatically copied to your clipboard and displayed on the page.'}
+            </p>
+          </div>
+        </section>
+
+        {/* Role Permissions */}
+        <section className="card">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            {isZh ? "7. 角色权限管理" : "7. Role Permissions"}
+          </h2>
+          <div className="text-sm text-gray-600 space-y-2">
+            <p>
+              {isZh
+                ? '管理员可以在"设置 > 用户管理"页面底部的"角色权限"部分配置每个角色可以访问哪些页面标签。管理员角色始终拥有所有权限。经理和员工的权限可以自定义。'
+                : 'Admins can configure which tabs each role can access in the "Role Permissions" section at the bottom of Settings > Users. The Admin role always has full access. Manager and Staff permissions are customizable.'}
+            </p>
+          </div>
+        </section>
+
+        {/* Manual Save */}
+        <section className="card">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            {isZh ? "8. 工单编辑与保存" : "8. Editing & Saving Work Orders"}
+          </h2>
+          <div className="text-sm text-gray-600 space-y-2">
+            <p>
+              {isZh
+                ? '在工单详情页编辑字段（进度、优先级、截止日期、负责人、销售代表、描述）时，更改不会自动保存。修改后会出现"未保存更改"提示栏，点击"保存"按钮提交所有更改，或点击"放弃更改"恢复原始值。状态更新仍然是即时生效的。'
+                : 'When editing fields on the work order detail page (progress, priority, due date, staff, sales rep, description), changes are not auto-saved. A "Unsaved changes" bar appears with Save and Discard buttons. Click Save to submit all changes at once, or Discard to revert. Status updates remain immediate.'}
             </p>
           </div>
         </section>

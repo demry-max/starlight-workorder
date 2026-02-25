@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useTranslation } from "@/i18n/context";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 
@@ -13,36 +14,68 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useTranslation();
+  const [permissions, setPermissions] = useState<string[] | null>(null);
+  const isLoginPage = pathname === "/admin/login";
 
-  // Don't wrap login page in admin layout
-  if (pathname === "/admin/login") {
-    return <>{children}</>;
-  }
+  useEffect(() => {
+    if (isLoginPage) return;
+    fetch("/api/admin/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) {
+          setPermissions(d.data.permissions);
+        }
+      })
+      .catch(() => {});
+  }, [isLoginPage]);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout?type=admin", { method: "POST" });
     router.push("/admin/login");
   };
 
-  const navItems = [
+  // Don't wrap login page in admin layout
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
+  const allNavItems = [
     {
       href: "/admin/dashboard",
       label: t("admin.nav.dashboard"),
       icon: DashboardIcon,
+      tabId: "dashboard",
     },
     {
       href: "/admin/workorders",
       label: t("admin.nav.workorders"),
       icon: OrdersIcon,
+      tabId: "workorders",
     },
-    { href: "/admin/logs", label: t("admin.nav.logs"), icon: LogsIcon },
-    { href: "/admin/guide", label: t("admin.nav.guide"), icon: GuideIcon },
+    {
+      href: "/admin/logs",
+      label: t("admin.nav.logs"),
+      icon: LogsIcon,
+      tabId: "logs",
+    },
+    {
+      href: "/admin/guide",
+      label: t("admin.nav.guide"),
+      icon: GuideIcon,
+      tabId: "guide",
+    },
     {
       href: "/admin/settings",
       label: t("admin.nav.settings"),
       icon: SettingsIcon,
+      tabId: "settings",
     },
   ];
+
+  // Filter nav items based on permissions (show all while loading)
+  const navItems = permissions
+    ? allNavItems.filter((item) => permissions.includes(item.tabId))
+    : allNavItems;
 
   return (
     <div className="min-h-screen bg-gray-50">

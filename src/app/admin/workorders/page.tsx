@@ -353,6 +353,7 @@ function CreateWorkOrderModal({
     workorderNumber: string;
     generatedPassword: string;
   } | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/staff")
@@ -436,15 +437,53 @@ function CreateWorkOrderModal({
               <p className="text-sm text-gray-500">
                 {t("admin.workorderForm.generatedNumber")}
               </p>
-              <p className="text-lg font-mono font-bold text-gray-900">
-                {created.workorderNumber}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-lg font-mono font-bold text-gray-900">
+                  {created.workorderNumber}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard
+                      .writeText(created.workorderNumber)
+                      .then(() => {
+                        setCopiedField("number");
+                        setTimeout(() => setCopiedField(null), 2000);
+                      })
+                      .catch(() => {});
+                  }}
+                  className="text-xs text-brand-600 hover:text-brand-700 font-medium"
+                >
+                  {copiedField === "number"
+                    ? t("common.copied")
+                    : t("common.copyToClipboard")}
+                </button>
+              </div>
               <p className="text-sm text-gray-500 mt-2">
                 {t("admin.workorderForm.password")}
               </p>
-              <p className="text-lg font-mono font-bold text-gray-900">
-                {created.generatedPassword}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-lg font-mono font-bold text-gray-900">
+                  {created.generatedPassword}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard
+                      .writeText(created.generatedPassword)
+                      .then(() => {
+                        setCopiedField("password");
+                        setTimeout(() => setCopiedField(null), 2000);
+                      })
+                      .catch(() => {});
+                  }}
+                  className="text-xs text-brand-600 hover:text-brand-700 font-medium"
+                >
+                  {copiedField === "password"
+                    ? t("common.copied")
+                    : t("common.copyToClipboard")}
+                </button>
+              </div>
             </div>
             <button onClick={onCreated} className="btn-primary">
               {t("common.close")}
@@ -608,6 +647,7 @@ function CreateWorkOrderModal({
                           Math.floor(Math.random() * chars.length),
                         );
                       update("password", pw);
+                      navigator.clipboard.writeText(pw).catch(() => {});
                     }}
                     className="btn-secondary whitespace-nowrap"
                     title={t("admin.workorderForm.generatePassword")}

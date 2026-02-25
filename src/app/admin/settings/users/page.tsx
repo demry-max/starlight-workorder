@@ -172,6 +172,8 @@ export default function AdminUsersPage() {
           }}
         />
       )}
+
+      <RolePermissionsSection />
     </div>
   );
 }
@@ -310,6 +312,162 @@ function UserModal({
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+const PERMISSION_TABS = [
+  { id: "dashboard", labelKey: "admin.permissions.tab.dashboard" },
+  { id: "workorders", labelKey: "admin.permissions.tab.workorders" },
+  { id: "logs", labelKey: "admin.permissions.tab.logs" },
+  { id: "guide", labelKey: "admin.permissions.tab.guide" },
+  { id: "settings", labelKey: "admin.permissions.tab.settings" },
+  { id: "settings.smtp", labelKey: "admin.permissions.tab.settings.smtp" },
+  {
+    id: "settings.statuses",
+    labelKey: "admin.permissions.tab.settings.statuses",
+  },
+  { id: "settings.users", labelKey: "admin.permissions.tab.settings.users" },
+  {
+    id: "settings.salesReps",
+    labelKey: "admin.permissions.tab.settings.salesReps",
+  },
+] as const;
+
+const PERM_ROLES = ["ADMIN", "MANAGER", "STAFF"] as const;
+
+function RolePermissionsSection() {
+  const { t } = useTranslation();
+  const [myRole, setMyRole] = useState<string | null>(null);
+  const [permissions, setPermissions] = useState<Record<
+    string,
+    string[]
+  > | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) setMyRole(d.data.role);
+      })
+      .catch(() => {});
+    fetch("/api/admin/permissions")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) setPermissions(d.data);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleToggle = (role: string, tabId: string) => {
+    if (!permissions) return;
+    if (role === "ADMIN") return;
+    setPermissions((prev) => {
+      if (!prev) return prev;
+      const current = prev[role] || [];
+      const has = current.includes(tabId);
+      let next: string[];
+      if (has) {
+        next = current.filter((t) => t !== tabId);
+        if (tabId === "settings") {
+          next = next.filter((t) => !t.startsWith("settings."));
+        }
+      } else {
+        next = [...current, tabId];
+        if (tabId.startsWith("settings.") && !next.includes("settings")) {
+          next.push("settings");
+        }
+      }
+      return { ...prev, [role]: next };
+    });
+  };
+
+  const handleSave = async () => {
+    if (!permissions) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/permissions", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(permissions),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPermissions(data.data);
+        setSaveMsg(t("admin.permissions.saveSuccess"));
+        setTimeout(() => setSaveMsg(null), 3000);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (myRole !== "ADMIN") return null;
+  if (!permissions) return null;
+
+  return (
+    <div className="mt-8">
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        {t("admin.permissions.title")}
+      </h2>
+      <div className="card overflow-hidden p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-gray-50">
+                <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  {t("admin.users.role")}
+                </th>
+                {PERMISSION_TABS.map((tab) => (
+                  <th
+                    key={tab.id}
+                    className={`px-3 py-3 text-center font-medium text-gray-500 ${
+                      tab.id.startsWith("settings.") ? "text-xs" : ""
+                    }`}
+                  >
+                    {t(tab.labelKey)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {PERM_ROLES.map((role) => (
+                <tr key={role} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 font-medium text-gray-900">
+                    {t(`admin.users.role_${role}`)}
+                  </td>
+                  {PERMISSION_TABS.map((tab) => {
+                    const isAdmin = role === "ADMIN";
+                    const checked =
+                      isAdmin || (permissions[role] || []).includes(tab.id);
+                    return (
+                      <td key={tab.id} className="px-3 py-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={isAdmin}
+                          onChange={() => handleToggle(role, tab.id)}
+                          className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 disabled:opacity-50"
+                        />
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div className="mt-4 flex items-center gap-3">
+        <button onClick={handleSave} disabled={saving} className="btn-primary">
+          {saving ? t("common.loading") : t("common.save")}
+        </button>
+        {saveMsg && (
+          <span className="text-sm font-medium text-green-600">{saveMsg}</span>
+        )}
       </div>
     </div>
   );

@@ -23,7 +23,9 @@
     "english": "English",
     "chinese": "中文",
     "logout": "退出登录",
-    "copyright": "© 2026 星耀财税 版权所有"
+    "copyright": "© 2026 星耀财税 版权所有",
+    "copied": "已复制！",
+    "copyToClipboard": "复制"
   },
   "status": {
     "DRAFT": "草稿",
@@ -157,7 +159,10 @@
       "clientLabel": "客户",
       "resetPassword": "重置密码",
       "newPassword": "新密码",
-      "passwordResetSuccess": "密码重置成功。"
+      "passwordResetSuccess": "密码重置成功。",
+      "unsavedChanges": "有未保存的更改",
+      "discard": "放弃更改",
+      "saveSuccess": "保存成功。"
     },
     "users": {
       "title": "用户管理",
@@ -177,6 +182,21 @@
       "role_STAFF": "员工",
       "confirmDelete": "确定要删除用户 {name} 吗？",
       "emailExists": "该邮箱已被使用。"
+    },
+    "permissions": {
+      "title": "角色权限",
+      "saveSuccess": "权限保存成功。",
+      "tab": {
+        "dashboard": "仪表盘",
+        "workorders": "工单管理",
+        "logs": "审计日志",
+        "guide": "使用指南",
+        "settings": "设置",
+        "settings.smtp": "SMTP",
+        "settings.statuses": "状态管理",
+        "settings.users": "用户管理",
+        "settings.salesReps": "销售代表"
+      }
     },
     "statuses": {
       "title": "状态管理",

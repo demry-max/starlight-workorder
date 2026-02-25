@@ -23,7 +23,9 @@
     "english": "English",
     "chinese": "中文",
     "logout": "Logout",
-    "copyright": "© 2026 Starlight Business Consulting. All rights reserved."
+    "copyright": "© 2026 Starlight Business Consulting. All rights reserved.",
+    "copied": "Copied!",
+    "copyToClipboard": "Copy"
   },
   "status": {
     "DRAFT": "Draft",
@@ -157,7 +159,10 @@
       "clientLabel": "Client",
       "resetPassword": "Reset Password",
       "newPassword": "New Password",
-      "passwordResetSuccess": "Password has been reset successfully."
+      "passwordResetSuccess": "Password has been reset successfully.",
+      "unsavedChanges": "Unsaved changes",
+      "discard": "Discard",
+      "saveSuccess": "Changes saved."
     },
     "users": {
       "title": "User Management",
@@ -177,6 +182,21 @@
       "role_STAFF": "Staff",
       "confirmDelete": "Are you sure you want to delete user {name}?",
       "emailExists": "A user with this email already exists."
+    },
+    "permissions": {
+      "title": "Role Permissions",
+      "saveSuccess": "Permissions saved.",
+      "tab": {
+        "dashboard": "Dashboard",
+        "workorders": "Work Orders",
+        "logs": "Audit Logs",
+        "guide": "Guide",
+        "settings": "Settings",
+        "settings.smtp": "SMTP",
+        "settings.statuses": "Statuses",
+        "settings.users": "Users",
+        "settings.salesReps": "Sales Reps"
+      }
     },
     "statuses": {
       "title": "Status Management",

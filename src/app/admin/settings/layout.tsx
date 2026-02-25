@@ -1,8 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "@/i18n/context";
+
+const SUB_TAB_MAP: Record<string, string> = {
+  "/admin/settings": "settings.smtp",
+  "/admin/settings/statuses": "settings.statuses",
+  "/admin/settings/users": "settings.users",
+  "/admin/settings/sales-reps": "settings.salesReps",
+};
 
 export default function SettingsLayout({
   children,
@@ -10,14 +18,46 @@ export default function SettingsLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { t } = useTranslation();
+  const [permissions, setPermissions] = useState<string[] | null>(null);
 
-  const tabs = [
-    { href: "/admin/settings", label: t("admin.settings.tabs.smtp") },
-    { href: "/admin/settings/statuses", label: t("admin.settings.tabs.statuses") },
-    { href: "/admin/settings/users", label: t("admin.settings.tabs.users") },
-    { href: "/admin/settings/sales-reps", label: t("admin.settings.tabs.salesReps") },
+  useEffect(() => {
+    fetch("/api/admin/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) {
+          setPermissions(d.data.permissions);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const allTabs = [
+    { href: "/admin/settings", label: t("admin.settings.tabs.smtp"), permId: "settings.smtp" },
+    { href: "/admin/settings/statuses", label: t("admin.settings.tabs.statuses"), permId: "settings.statuses" },
+    { href: "/admin/settings/users", label: t("admin.settings.tabs.users"), permId: "settings.users" },
+    { href: "/admin/settings/sales-reps", label: t("admin.settings.tabs.salesReps"), permId: "settings.salesReps" },
   ];
+
+  const tabs = permissions
+    ? allTabs.filter((tab) => permissions.includes(tab.permId))
+    : allTabs;
+
+  // Redirect if current sub-tab is not permitted
+  useEffect(() => {
+    if (!permissions) return;
+    const currentPermId = SUB_TAB_MAP[pathname];
+    if (currentPermId && !permissions.includes(currentPermId)) {
+      // Find the first allowed tab
+      const firstAllowed = allTabs.find((tab) =>
+        permissions.includes(tab.permId),
+      );
+      if (firstAllowed) {
+        router.replace(firstAllowed.href);
+      }
+    }
+  }, [permissions, pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div>

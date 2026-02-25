@@ -91,6 +91,7 @@
     "nav": {
       "dashboard": "Dashboard",
       "workorders": "Work Orders",
+      "users": "Users",
       "syncFeishu": "Sync Feishu"
     },
     "dashboard": {
@@ -109,7 +110,8 @@
       "searchPlaceholder": "Search by order number or client name...",
       "allStatuses": "All Statuses",
       "noOrders": "No work orders found.",
-      "overdue": "Overdue"
+      "overdue": "Overdue",
+      "confirmDelete": "Are you sure you want to delete this work order? This action cannot be undone."
     },
     "workorderForm": {
       "createTitle": "Create Work Order",
@@ -128,12 +130,14 @@
       "password": "Client Password",
       "passwordHint": "Password for the client to access this work order.",
       "generatedNumber": "Generated Order Number",
+      "generatePassword": "Generate Password",
       "internalNote": "Internal Note",
       "internalNotePlaceholder": "Add an internal note (not visible to client)...",
       "addInternalNote": "Add Internal Note"
     },
     "detail": {
       "updateStatus": "Update Status",
+      "selectStatus": "Select new status...",
       "statusNote": "Status Change Note",
       "comments": "Comments & Notes",
       "internalNotes": "Internal Notes",
@@ -143,6 +147,25 @@
       "internalLabel": "INTERNAL",
       "staffLabel": "Staff",
       "clientLabel": "Client"
+    },
+    "users": {
+      "title": "User Management",
+      "createNew": "Create User",
+      "editUser": "Edit User",
+      "noUsers": "No users found.",
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "passwordPlaceholder": "Leave blank to keep current password",
+      "role": "Role",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "role_ADMIN": "Admin",
+      "role_MANAGER": "Manager",
+      "role_STAFF": "Staff",
+      "confirmDelete": "Are you sure you want to delete user {name}?",
+      "emailExists": "A user with this email already exists."
     },
     "feishu": {
       "syncTitle": "Feishu Sync",

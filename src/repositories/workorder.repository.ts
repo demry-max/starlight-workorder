@@ -1,19 +1,19 @@
-import { prisma } from '@/lib/prisma';
-import { WorkOrderStatus, Prisma } from '@prisma/client';
+import { prisma } from "@/lib/prisma";
+import { WorkOrderStatus, Prisma } from "@prisma/client";
 
 export interface WorkOrderFilter {
   search?: string;
   status?: WorkOrderStatus;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
   page: number;
   pageSize: number;
 }
 
 const workorderInclude = {
   assignedStaff: { select: { id: true, name: true, email: true } },
-  statusHistory: { orderBy: { createdAt: 'asc' as const } },
-  comments: { orderBy: { createdAt: 'asc' as const } },
+  statusHistory: { orderBy: { createdAt: "asc" as const } },
+  comments: { orderBy: { createdAt: "asc" as const } },
 };
 
 export const workorderRepository = {
@@ -36,9 +36,9 @@ export const workorderRepository = {
 
     if (filter.search) {
       where.OR = [
-        { workorderNumber: { contains: filter.search, mode: 'insensitive' } },
-        { clientName: { contains: filter.search, mode: 'insensitive' } },
-        { clientCompany: { contains: filter.search, mode: 'insensitive' } },
+        { workorderNumber: { contains: filter.search, mode: "insensitive" } },
+        { clientName: { contains: filter.search, mode: "insensitive" } },
+        { clientCompany: { contains: filter.search, mode: "insensitive" } },
       ];
     }
 
@@ -46,15 +46,17 @@ export const workorderRepository = {
       where.status = filter.status;
     }
 
-    const orderByField = filter.sortBy || 'created_at';
+    const orderByField = filter.sortBy || "created_at";
     const fieldMap: Record<string, string> = {
-      created_at: 'createdAt',
-      updated_at: 'updatedAt',
-      due_date: 'dueDate',
-      status: 'status',
-      priority: 'priority',
+      created_at: "createdAt",
+      updated_at: "updatedAt",
+      due_date: "dueDate",
+      status: "status",
+      priority: "priority",
     };
-    const orderBy = { [fieldMap[orderByField] || 'createdAt']: filter.sortOrder || 'desc' };
+    const orderBy = {
+      [fieldMap[orderByField] || "createdAt"]: filter.sortOrder || "desc",
+    };
 
     const [items, total] = await Promise.all([
       prisma.workOrder.findMany({
@@ -87,6 +89,10 @@ export const workorderRepository = {
     });
   },
 
+  async delete(id: string) {
+    return prisma.workOrder.delete({ where: { id } });
+  },
+
   async addStatusHistory(data: {
     workOrderId: string;
     oldStatus: WorkOrderStatus | null;
@@ -103,8 +109,14 @@ export const workorderRepository = {
       data: { failedAttempts: { increment: 1 } },
     });
 
-    const maxAttempts = parseInt(process.env.RATE_LIMIT_MAX_ATTEMPTS || '5', 10);
-    const lockoutDuration = parseInt(process.env.LOCKOUT_DURATION_MS || '900000', 10);
+    const maxAttempts = parseInt(
+      process.env.RATE_LIMIT_MAX_ATTEMPTS || "5",
+      10,
+    );
+    const lockoutDuration = parseInt(
+      process.env.LOCKOUT_DURATION_MS || "900000",
+      10,
+    );
 
     if (order.failedAttempts >= maxAttempts) {
       await prisma.workOrder.update({
@@ -128,7 +140,7 @@ export const workorderRepository = {
 
   async countByStatus() {
     const results = await prisma.workOrder.groupBy({
-      by: ['status'],
+      by: ["status"],
       _count: true,
     });
     return results.map((r) => ({ status: r.status, count: r._count }));
@@ -136,7 +148,7 @@ export const workorderRepository = {
 
   async countOpen() {
     return prisma.workOrder.count({
-      where: { status: { notIn: ['COMPLETED', 'CLOSED', 'CANCELLED'] } },
+      where: { status: { notIn: ["COMPLETED", "CLOSED", "CANCELLED"] } },
     });
   },
 
@@ -144,34 +156,36 @@ export const workorderRepository = {
     return prisma.workOrder.count({
       where: {
         dueDate: { lt: new Date() },
-        status: { notIn: ['COMPLETED', 'CLOSED', 'CANCELLED'] },
+        status: { notIn: ["COMPLETED", "CLOSED", "CANCELLED"] },
       },
     });
   },
 
   async countWaitingForClient() {
     return prisma.workOrder.count({
-      where: { status: 'WAITING_FOR_CLIENT' },
+      where: { status: "WAITING_FOR_CLIENT" },
     });
   },
 
   async countCompletedSince(since: Date) {
     return prisma.workOrder.count({
-      where: { status: 'COMPLETED', updatedAt: { gte: since } },
+      where: { status: "COMPLETED", updatedAt: { gte: since } },
     });
   },
 
   async staffWorkload() {
     const results = await prisma.workOrder.groupBy({
-      by: ['assignedStaffId'],
+      by: ["assignedStaffId"],
       where: {
-        status: { notIn: ['COMPLETED', 'CLOSED', 'CANCELLED'] },
+        status: { notIn: ["COMPLETED", "CLOSED", "CANCELLED"] },
         assignedStaffId: { not: null },
       },
       _count: true,
     });
 
-    const staffIds = results.map((r) => r.assignedStaffId).filter(Boolean) as string[];
+    const staffIds = results
+      .map((r) => r.assignedStaffId)
+      .filter(Boolean) as string[];
     const staff = await prisma.staffUser.findMany({
       where: { id: { in: staffIds } },
       select: { id: true, name: true },
@@ -179,18 +193,21 @@ export const workorderRepository = {
 
     const staffMap = new Map(staff.map((s) => [s.id, s.name]));
     return results.map((r) => ({
-      staffId: r.assignedStaffId || '',
-      staffName: staffMap.get(r.assignedStaffId || '') || 'Unassigned',
+      staffId: r.assignedStaffId || "",
+      staffName: staffMap.get(r.assignedStaffId || "") || "Unassigned",
       count: r._count,
     }));
   },
 
-  async findAllForExport(filter: { search?: string; status?: WorkOrderStatus }) {
+  async findAllForExport(filter: {
+    search?: string;
+    status?: WorkOrderStatus;
+  }) {
     const where: Prisma.WorkOrderWhereInput = {};
     if (filter.search) {
       where.OR = [
-        { workorderNumber: { contains: filter.search, mode: 'insensitive' } },
-        { clientName: { contains: filter.search, mode: 'insensitive' } },
+        { workorderNumber: { contains: filter.search, mode: "insensitive" } },
+        { clientName: { contains: filter.search, mode: "insensitive" } },
       ];
     }
     if (filter.status) {
@@ -200,7 +217,7 @@ export const workorderRepository = {
     return prisma.workOrder.findMany({
       where,
       include: { assignedStaff: { select: { name: true } } },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
   },
 };

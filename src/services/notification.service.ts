@@ -1,5 +1,4 @@
-// Notification Service - Abstraction layer for future email/webhook integrations
-// This service currently logs events. Replace with actual implementations when ready.
+import nodemailer from 'nodemailer';
 
 interface StatusUpdateEvent {
   workOrderId: string;
@@ -14,39 +13,183 @@ interface CommentEvent {
   workorderNumber: string;
   authorType: string;
   content: string;
+  clientEmail?: string | null;
+}
+
+interface WorkOrderCreatedEvent {
+  workorderNumber: string;
+  clientName: string;
+  clientEmail: string;
+  password: string;
+}
+
+function getTransporter() {
+  const host = process.env.SMTP_HOST;
+  const port = parseInt(process.env.SMTP_PORT || '587', 10);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (!host || !user || !pass) return null;
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+  });
+}
+
+function getFrom(): string {
+  return process.env.SMTP_FROM || `Starlight WorkOrder <${process.env.SMTP_USER || 'noreply@starlight.com'}>`;
+}
+
+function getAppUrl(): string {
+  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 }
 
 export const notificationService = {
-  onStatusUpdate(event: StatusUpdateEvent): void {
-    // Future: Send email notification to client
-    // Future: Trigger webhook
+  async onWorkOrderCreated(event: WorkOrderCreatedEvent): Promise<void> {
+    const transporter = getTransporter();
+    if (!transporter || !event.clientEmail) {
+      console.log('[Notification] SMTP not configured or no client email, skipping work order created email');
+      return;
+    }
+
+    const appUrl = getAppUrl();
+    const subject = `Your Work Order ${event.workorderNumber} Has Been Created | 您的工单 ${event.workorderNumber} 已创建`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #111827; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: #F59E0B; margin: 0; font-size: 24px;">Starlight WorkOrder</h1>
+          <p style="color: #9CA3AF; margin: 4px 0 0;">星光工单管理系统</p>
+        </div>
+        <div style="border: 1px solid #E5E7EB; border-top: none; padding: 24px; border-radius: 0 0 8px 8px;">
+          <p>Dear <strong>${event.clientName}</strong>,</p>
+          <p>Your work order has been created. Use the credentials below to check its status:</p>
+          <div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 16px; margin: 16px 0;">
+            <p style="margin: 0 0 8px;"><strong>Order Number / 工单号:</strong></p>
+            <p style="font-family: monospace; font-size: 18px; margin: 0 0 12px; color: #111827;">${event.workorderNumber}</p>
+            <p style="margin: 0 0 8px;"><strong>Password / 密码:</strong></p>
+            <p style="font-family: monospace; font-size: 18px; margin: 0; color: #111827;">${event.password}</p>
+          </div>
+          <a href="${appUrl}/client/login" style="display: inline-block; background: #F59E0B; color: #111827; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">View Your Work Order / 查看您的工单</a>
+          <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 24px 0;" />
+          <p style="color: #6B7280; font-size: 12px;">尊敬的 <strong>${event.clientName}</strong>，您的工单已创建。请使用以上凭证查看工单状态。</p>
+          <p style="color: #9CA3AF; font-size: 11px; margin-top: 16px;">© 2026 Starlight Business Consulting | 星光商务咨询</p>
+        </div>
+      </div>
+    `;
+
+    try {
+      await transporter.sendMail({
+        from: getFrom(),
+        to: event.clientEmail,
+        subject,
+        html,
+      });
+      console.log(`[Notification] Work order created email sent to ${event.clientEmail}`);
+    } catch (err) {
+      console.error('[Notification] Failed to send work order created email:', err);
+    }
+  },
+
+  async onStatusUpdate(event: StatusUpdateEvent): Promise<void> {
     console.log('[Notification] Status update:', {
       workorderNumber: event.workorderNumber,
       transition: `${event.oldStatus} → ${event.newStatus}`,
-      clientEmail: event.clientEmail,
     });
 
-    // Webhook hook point
     notificationService._triggerWebhook('status_update', event);
+
+    const transporter = getTransporter();
+    if (!transporter || !event.clientEmail) return;
+
+    const appUrl = getAppUrl();
+    const statusLabels: Record<string, { en: string; zh: string }> = {
+      DRAFT: { en: 'Draft', zh: '草稿' },
+      RECEIVED: { en: 'Received', zh: '已接收' },
+      IN_PROGRESS: { en: 'In Progress', zh: '进行中' },
+      WAITING_FOR_CLIENT: { en: 'Waiting for Client', zh: '等待客户' },
+      WAITING_FOR_THIRD_PARTY: { en: 'Waiting for Third Party', zh: '等待第三方' },
+      COMPLETED: { en: 'Completed', zh: '已完成' },
+      CLOSED: { en: 'Closed', zh: '已关闭' },
+      CANCELLED: { en: 'Cancelled', zh: '已取消' },
+    };
+
+    const newLabel = statusLabels[event.newStatus] || { en: event.newStatus, zh: event.newStatus };
+    const subject = `Work Order ${event.workorderNumber} Status Updated: ${newLabel.en} | 工单状态已更新：${newLabel.zh}`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #111827; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: #F59E0B; margin: 0; font-size: 24px;">Starlight WorkOrder</h1>
+        </div>
+        <div style="border: 1px solid #E5E7EB; border-top: none; padding: 24px; border-radius: 0 0 8px 8px;">
+          <p>Your work order <strong>${event.workorderNumber}</strong> status has been updated:</p>
+          <div style="background: #F9FAFB; border-radius: 8px; padding: 16px; margin: 16px 0; text-align: center;">
+            <p style="font-size: 20px; font-weight: bold; color: #111827; margin: 0;">${newLabel.en} / ${newLabel.zh}</p>
+          </div>
+          <a href="${appUrl}/client/login" style="display: inline-block; background: #F59E0B; color: #111827; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">View Details / 查看详情</a>
+          <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 24px 0;" />
+          <p style="color: #6B7280; font-size: 12px;">您的工单 <strong>${event.workorderNumber}</strong> 状态已更新为：${newLabel.zh}</p>
+          <p style="color: #9CA3AF; font-size: 11px; margin-top: 16px;">© 2026 Starlight Business Consulting</p>
+        </div>
+      </div>
+    `;
+
+    try {
+      await transporter.sendMail({ from: getFrom(), to: event.clientEmail, subject, html });
+      console.log(`[Notification] Status update email sent to ${event.clientEmail}`);
+    } catch (err) {
+      console.error('[Notification] Failed to send status update email:', err);
+    }
   },
 
-  onNewComment(event: CommentEvent): void {
-    // Future: Send email notification
-    // Future: Trigger webhook
+  async onNewComment(event: CommentEvent): Promise<void> {
     console.log('[Notification] New comment:', {
       workorderNumber: event.workorderNumber,
       authorType: event.authorType,
     });
 
     notificationService._triggerWebhook('new_comment', event);
+
+    // Only notify client when staff replies (not internal notes, not client's own comments)
+    if (event.authorType !== 'STAFF') return;
+
+    const transporter = getTransporter();
+    if (!transporter || !event.clientEmail) return;
+
+    const appUrl = getAppUrl();
+    const subject = `New Reply on Work Order ${event.workorderNumber} | 工单有新回复`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #111827; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: #F59E0B; margin: 0; font-size: 24px;">Starlight WorkOrder</h1>
+        </div>
+        <div style="border: 1px solid #E5E7EB; border-top: none; padding: 24px; border-radius: 0 0 8px 8px;">
+          <p>There is a new reply on your work order <strong>${event.workorderNumber}</strong>:</p>
+          <div style="background: #F9FAFB; border-left: 4px solid #F59E0B; padding: 12px 16px; margin: 16px 0;">
+            <p style="margin: 0; color: #374151;">${event.content.substring(0, 500)}${event.content.length > 500 ? '...' : ''}</p>
+          </div>
+          <a href="${appUrl}/client/login" style="display: inline-block; background: #F59E0B; color: #111827; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">View & Reply / 查看并回复</a>
+          <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 24px 0;" />
+          <p style="color: #6B7280; font-size: 12px;">您的工单 <strong>${event.workorderNumber}</strong> 有新回复，请登录查看。</p>
+          <p style="color: #9CA3AF; font-size: 11px; margin-top: 16px;">© 2026 Starlight Business Consulting</p>
+        </div>
+      </div>
+    `;
+
+    try {
+      await transporter.sendMail({ from: getFrom(), to: event.clientEmail, subject, html });
+      console.log(`[Notification] New comment email sent to ${event.clientEmail}`);
+    } catch (err) {
+      console.error('[Notification] Failed to send comment email:', err);
+    }
   },
 
-  // Internal webhook trigger (implement when webhook URL is configured)
   _triggerWebhook(eventType: string, payload: unknown): void {
     const webhookUrl = process.env.WEBHOOK_URL;
     if (!webhookUrl) return;
 
-    // Fire and forget - do not await
     fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -54,11 +197,5 @@ export const notificationService = {
     }).catch((err) => {
       console.error('[Notification] Webhook failed:', err.message);
     });
-  },
-
-  // Email service hook (implement when email service is configured)
-  async sendEmail(_to: string, _subject: string, _body: string): Promise<void> {
-    // Future implementation: SendGrid, AWS SES, etc.
-    console.log('[Notification] Email sending not configured');
   },
 };

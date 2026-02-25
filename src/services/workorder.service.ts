@@ -1,9 +1,12 @@
-import bcrypt from 'bcryptjs';
-import { WorkOrderStatus } from '@prisma/client';
-import { workorderRepository } from '@/repositories/workorder.repository';
-import { isValidTransition, STATUS_DEFAULT_PROGRESS } from '@/lib/status-machine';
-import { generateWorkOrderNumber } from '@/lib/utils';
-import { notificationService } from './notification.service';
+import bcrypt from "bcryptjs";
+import { WorkOrderStatus } from "@prisma/client";
+import { workorderRepository } from "@/repositories/workorder.repository";
+import {
+  isValidTransition,
+  STATUS_DEFAULT_PROGRESS,
+} from "@/lib/status-machine";
+import { generateWorkOrderNumber } from "@/lib/utils";
+import { notificationService } from "./notification.service";
 
 export const workorderService = {
   async getClientView(workOrderId: string) {
@@ -66,17 +69,20 @@ export const workorderService = {
     };
   },
 
-  async create(data: {
-    clientName: string;
-    clientCompany?: string;
-    clientEmail?: string;
-    clientPhone?: string;
-    description?: string;
-    priority?: string;
-    dueDate?: string;
-    assignedStaffId?: string;
-    password: string;
-  }, staffId: string) {
+  async create(
+    data: {
+      clientName: string;
+      clientCompany?: string;
+      clientEmail?: string;
+      clientPhone?: string;
+      description?: string;
+      priority?: string;
+      dueDate?: string;
+      assignedStaffId?: string;
+      password: string;
+    },
+    staffId: string,
+  ) {
     const workorderNumber = generateWorkOrderNumber();
     const passwordHash = await bcrypt.hash(data.password, 12);
 
@@ -88,21 +94,31 @@ export const workorderService = {
       clientEmail: data.clientEmail || null,
       clientPhone: data.clientPhone || null,
       description: data.description || null,
-      priority: (data.priority as never) || 'MEDIUM',
+      priority: (data.priority as never) || "MEDIUM",
       dueDate: data.dueDate ? new Date(data.dueDate) : null,
       assignedStaff: data.assignedStaffId
         ? { connect: { id: data.assignedStaffId } }
         : undefined,
-      status: 'DRAFT',
+      status: "DRAFT",
     });
 
     await workorderRepository.addStatusHistory({
       workOrderId: order.id,
       oldStatus: null,
-      newStatus: 'DRAFT',
+      newStatus: "DRAFT",
       changedBy: staffId,
-      note: 'Work order created',
+      note: "Work order created",
     });
+
+    // Send email notification with credentials
+    if (data.clientEmail) {
+      notificationService.onWorkOrderCreated({
+        workorderNumber,
+        clientName: data.clientName,
+        clientEmail: data.clientEmail,
+        password: data.password,
+      });
+    }
 
     return { ...order, generatedPassword: data.password, workorderNumber };
   },
@@ -111,13 +127,15 @@ export const workorderService = {
     workOrderId: string,
     newStatus: WorkOrderStatus,
     staffId: string,
-    note?: string
+    note?: string,
   ) {
     const order = await workorderRepository.findById(workOrderId);
-    if (!order) throw new Error('Work order not found');
+    if (!order) throw new Error("Work order not found");
 
     if (!isValidTransition(order.status, newStatus)) {
-      throw new Error(`Invalid transition from ${order.status} to ${newStatus}`);
+      throw new Error(
+        `Invalid transition from ${order.status} to ${newStatus}`,
+      );
     }
 
     const updateData: Record<string, unknown> = { status: newStatus };
@@ -162,17 +180,22 @@ export const workorderService = {
       clientCompany?: string | null;
       clientEmail?: string | null;
       clientPhone?: string | null;
-    }
+    },
   ) {
     const updateData: Record<string, unknown> = {};
 
-    if (data.progressPercentage !== undefined) updateData.progressPercentage = data.progressPercentage;
+    if (data.progressPercentage !== undefined)
+      updateData.progressPercentage = data.progressPercentage;
     if (data.priority !== undefined) updateData.priority = data.priority;
-    if (data.description !== undefined) updateData.description = data.description;
+    if (data.description !== undefined)
+      updateData.description = data.description;
     if (data.clientName !== undefined) updateData.clientName = data.clientName;
-    if (data.clientCompany !== undefined) updateData.clientCompany = data.clientCompany;
-    if (data.clientEmail !== undefined) updateData.clientEmail = data.clientEmail || null;
-    if (data.clientPhone !== undefined) updateData.clientPhone = data.clientPhone;
+    if (data.clientCompany !== undefined)
+      updateData.clientCompany = data.clientCompany;
+    if (data.clientEmail !== undefined)
+      updateData.clientEmail = data.clientEmail || null;
+    if (data.clientPhone !== undefined)
+      updateData.clientPhone = data.clientPhone;
 
     if (data.dueDate !== undefined) {
       updateData.dueDate = data.dueDate ? new Date(data.dueDate) : null;
@@ -193,7 +216,7 @@ export const workorderService = {
     search?: string;
     status?: WorkOrderStatus;
     sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
+    sortOrder?: "asc" | "desc";
     page: number;
     pageSize: number;
   }) {

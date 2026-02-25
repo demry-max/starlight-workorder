@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback } from 'react';
-import Link from 'next/link';
-import { useTranslation } from '@/i18n/context';
-import { StatusBadge } from '@/components/StatusBadge';
-import { Pagination } from '@/components/Pagination';
-import type { WorkOrderStatus } from '@/types';
+import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
+import { useTranslation } from "@/i18n/context";
+import { StatusBadge } from "@/components/StatusBadge";
+import { Pagination } from "@/components/Pagination";
+import type { WorkOrderStatus } from "@/types";
 
 interface WorkOrderListItem {
   id: string;
@@ -22,8 +22,14 @@ interface WorkOrderListItem {
 }
 
 const ALL_STATUSES: WorkOrderStatus[] = [
-  'DRAFT', 'RECEIVED', 'IN_PROGRESS', 'WAITING_FOR_CLIENT',
-  'WAITING_FOR_THIRD_PARTY', 'COMPLETED', 'CLOSED', 'CANCELLED',
+  "DRAFT",
+  "RECEIVED",
+  "IN_PROGRESS",
+  "WAITING_FOR_CLIENT",
+  "WAITING_FOR_THIRD_PARTY",
+  "COMPLETED",
+  "CLOSED",
+  "CANCELLED",
 ];
 
 export default function AdminWorkOrdersPage() {
@@ -32,8 +38,8 @@ export default function AdminWorkOrdersPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -41,10 +47,10 @@ export default function AdminWorkOrdersPage() {
     setLoading(true);
     const params = new URLSearchParams({
       page: String(page),
-      pageSize: '20',
+      pageSize: "20",
     });
-    if (search) params.set('search', search);
-    if (statusFilter) params.set('status', statusFilter);
+    if (search) params.set("search", search);
+    if (statusFilter) params.set("status", statusFilter);
 
     try {
       const res = await fetch(`/api/admin/workorders?${params}`);
@@ -64,28 +70,40 @@ export default function AdminWorkOrdersPage() {
   }, [fetchOrders]);
 
   const handleExport = () => {
-    const params = new URLSearchParams({ export: 'csv' });
-    if (search) params.set('search', search);
-    if (statusFilter) params.set('status', statusFilter);
-    window.open(`/api/admin/workorders?${params}`, '_blank');
+    const params = new URLSearchParams({ export: "csv" });
+    if (search) params.set("search", search);
+    if (statusFilter) params.set("status", statusFilter);
+    window.open(`/api/admin/workorders?${params}`, "_blank");
+  };
+
+  const handleDeleteOrder = async (id: string) => {
+    if (!confirm(t("admin.workorders.confirmDelete"))) return;
+    const res = await fetch(`/api/admin/workorder/${id}`, { method: "DELETE" });
+    const data = await res.json();
+    if (data.success) fetchOrders();
   };
 
   const isOverdue = (dueDate: string | null, status: string) => {
     if (!dueDate) return false;
-    if (['COMPLETED', 'CLOSED', 'CANCELLED'].includes(status)) return false;
+    if (["COMPLETED", "CLOSED", "CANCELLED"].includes(status)) return false;
     return new Date(dueDate) < new Date();
   };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{t('admin.workorders.title')}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          {t("admin.workorders.title")}
+        </h1>
         <div className="flex gap-2">
           <button onClick={handleExport} className="btn-secondary">
-            {t('common.export')}
+            {t("common.export")}
           </button>
-          <button onClick={() => setShowCreateModal(true)} className="btn-primary">
-            {t('admin.workorders.createNew')}
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="btn-primary"
+          >
+            {t("admin.workorders.createNew")}
           </button>
         </div>
       </div>
@@ -96,18 +114,26 @@ export default function AdminWorkOrdersPage() {
           <input
             type="text"
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder={t('admin.workorders.searchPlaceholder')}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder={t("admin.workorders.searchPlaceholder")}
             className="input-field flex-1"
           />
           <select
             value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
             className="input-field sm:w-48"
           >
-            <option value="">{t('admin.workorders.allStatuses')}</option>
+            <option value="">{t("admin.workorders.allStatuses")}</option>
             {ALL_STATUSES.map((s) => (
-              <option key={s} value={s}>{t(`status.${s}`)}</option>
+              <option key={s} value={s}>
+                {t(`status.${s}`)}
+              </option>
             ))}
           </select>
         </div>
@@ -116,23 +142,43 @@ export default function AdminWorkOrdersPage() {
       {/* Table */}
       <div className="card overflow-hidden p-0">
         {loading ? (
-          <div className="py-12 text-center text-gray-400">{t('common.loading')}</div>
+          <div className="py-12 text-center text-gray-400">
+            {t("common.loading")}
+          </div>
         ) : orders.length === 0 ? (
-          <div className="py-12 text-center text-gray-400">{t('admin.workorders.noOrders')}</div>
+          <div className="py-12 text-center text-gray-400">
+            {t("admin.workorders.noOrders")}
+          </div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-gray-50">
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">{t('client.workorder.orderNumber')}</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">{t('client.workorder.client')}</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">{t('client.workorder.status')}</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">{t('client.workorder.priority')}</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">{t('client.workorder.progress')}</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">{t('client.workorder.assignedTo')}</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">{t('client.workorder.dueDate')}</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">{t('common.actions')}</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500">
+                      {t("client.workorder.orderNumber")}
+                    </th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500">
+                      {t("client.workorder.client")}
+                    </th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500">
+                      {t("client.workorder.status")}
+                    </th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500">
+                      {t("client.workorder.priority")}
+                    </th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500">
+                      {t("client.workorder.progress")}
+                    </th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500">
+                      {t("client.workorder.assignedTo")}
+                    </th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500">
+                      {t("client.workorder.dueDate")}
+                    </th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500">
+                      {t("common.actions")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -142,9 +188,13 @@ export default function AdminWorkOrdersPage() {
                         {order.workorderNumber}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900">{order.clientName}</div>
+                        <div className="font-medium text-gray-900">
+                          {order.clientName}
+                        </div>
                         {order.clientCompany && (
-                          <div className="text-xs text-gray-500">{order.clientCompany}</div>
+                          <div className="text-xs text-gray-500">
+                            {order.clientCompany}
+                          </div>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -161,18 +211,30 @@ export default function AdminWorkOrdersPage() {
                               style={{ width: `${order.progressPercentage}%` }}
                             />
                           </div>
-                          <span className="text-xs text-gray-500">{order.progressPercentage}%</span>
+                          <span className="text-xs text-gray-500">
+                            {order.progressPercentage}%
+                          </span>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-gray-600">
-                        {order.assignedStaff?.name || '-'}
+                        {order.assignedStaff?.name || "-"}
                       </td>
                       <td className="px-4 py-3">
                         {order.dueDate ? (
-                          <span className={isOverdue(order.dueDate, order.status) ? 'font-medium text-red-600' : 'text-gray-600'}>
-                            {new Date(order.dueDate).toLocaleDateString(locale === 'zh' ? 'zh-CN' : 'en-US')}
+                          <span
+                            className={
+                              isOverdue(order.dueDate, order.status)
+                                ? "font-medium text-red-600"
+                                : "text-gray-600"
+                            }
+                          >
+                            {new Date(order.dueDate).toLocaleDateString(
+                              locale === "zh" ? "zh-CN" : "en-US",
+                            )}
                             {isOverdue(order.dueDate, order.status) && (
-                              <span className="ml-1 text-xs">({t('admin.workorders.overdue')})</span>
+                              <span className="ml-1 text-xs">
+                                ({t("admin.workorders.overdue")})
+                              </span>
                             )}
                           </span>
                         ) : (
@@ -180,12 +242,20 @@ export default function AdminWorkOrdersPage() {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <Link
-                          href={`/admin/workorders/${order.id}`}
-                          className="text-sm font-medium text-brand-600 hover:text-brand-700"
-                        >
-                          {t('common.edit')}
-                        </Link>
+                        <div className="flex gap-2">
+                          <Link
+                            href={`/admin/workorders/${order.id}`}
+                            className="text-sm font-medium text-brand-600 hover:text-brand-700"
+                          >
+                            {t("common.edit")}
+                          </Link>
+                          <button
+                            onClick={() => handleDeleteOrder(order.id)}
+                            className="text-sm font-medium text-red-600 hover:text-red-700"
+                          >
+                            {t("common.delete")}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -208,7 +278,10 @@ export default function AdminWorkOrdersPage() {
       {showCreateModal && (
         <CreateWorkOrderModal
           onClose={() => setShowCreateModal(false)}
-          onCreated={() => { setShowCreateModal(false); fetchOrders(); }}
+          onCreated={() => {
+            setShowCreateModal(false);
+            fetchOrders();
+          }}
         />
       )}
     </div>
@@ -224,39 +297,46 @@ function CreateWorkOrderModal({
 }) {
   const { t } = useTranslation();
   const [form, setForm] = useState({
-    clientName: '',
-    clientCompany: '',
-    clientEmail: '',
-    clientPhone: '',
-    description: '',
-    priority: 'MEDIUM',
-    dueDate: '',
-    assignedStaffId: '',
-    password: '',
+    clientName: "",
+    clientCompany: "",
+    clientEmail: "",
+    clientPhone: "",
+    description: "",
+    priority: "MEDIUM",
+    dueDate: "",
+    assignedStaffId: "",
+    password: "",
   });
   const [staff, setStaff] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [created, setCreated] = useState<{ workorderNumber: string; generatedPassword: string } | null>(null);
+  const [error, setError] = useState("");
+  const [created, setCreated] = useState<{
+    workorderNumber: string;
+    generatedPassword: string;
+  } | null>(null);
 
   useEffect(() => {
-    fetch('/api/admin/staff')
+    fetch("/api/admin/staff")
       .then((r) => r.json())
-      .then((d) => { if (d.success) setStaff(d.data); });
+      .then((d) => {
+        if (d.success) setStaff(d.data);
+      });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      const res = await fetch('/api/admin/workorders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/admin/workorders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          dueDate: form.dueDate ? new Date(form.dueDate).toISOString() : undefined,
+          dueDate: form.dueDate
+            ? new Date(form.dueDate).toISOString()
+            : undefined,
           assignedStaffId: form.assignedStaffId || undefined,
           clientEmail: form.clientEmail || undefined,
         }),
@@ -269,16 +349,17 @@ function CreateWorkOrderModal({
           generatedPassword: data.data.generatedPassword,
         });
       } else {
-        setError(t('errors.validation'));
+        setError(t("errors.validation"));
       }
     } catch {
-      setError(t('errors.generic'));
+      setError(t("errors.generic"));
     } finally {
       setLoading(false);
     }
   };
 
-  const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
+  const update = (field: string, value: string) =>
+    setForm((p) => ({ ...p, [field]: value }));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -286,83 +367,222 @@ function CreateWorkOrderModal({
         {created ? (
           <div className="text-center">
             <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600">
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4.5 12.75l6 6 9-13.5"
+                />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.workorderForm.createTitle')}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {t("admin.workorderForm.createTitle")}
+            </h3>
             <div className="rounded-lg bg-gray-50 p-4 text-left mb-4">
-              <p className="text-sm text-gray-500">{t('admin.workorderForm.generatedNumber')}</p>
-              <p className="text-lg font-mono font-bold text-gray-900">{created.workorderNumber}</p>
-              <p className="text-sm text-gray-500 mt-2">{t('admin.workorderForm.password')}</p>
-              <p className="text-lg font-mono font-bold text-gray-900">{created.generatedPassword}</p>
+              <p className="text-sm text-gray-500">
+                {t("admin.workorderForm.generatedNumber")}
+              </p>
+              <p className="text-lg font-mono font-bold text-gray-900">
+                {created.workorderNumber}
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                {t("admin.workorderForm.password")}
+              </p>
+              <p className="text-lg font-mono font-bold text-gray-900">
+                {created.generatedPassword}
+              </p>
             </div>
-            <button onClick={onCreated} className="btn-primary">{t('common.close')}</button>
+            <button onClick={onCreated} className="btn-primary">
+              {t("common.close")}
+            </button>
           </div>
         ) : (
           <>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.workorderForm.createTitle')}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {t("admin.workorderForm.createTitle")}
+            </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">{t('admin.workorderForm.clientName')} *</label>
-                  <input type="text" value={form.clientName} onChange={(e) => update('clientName', e.target.value)} className="input-field" required />
+                  <label className="label">
+                    {t("admin.workorderForm.clientName")} *
+                  </label>
+                  <input
+                    type="text"
+                    value={form.clientName}
+                    onChange={(e) => update("clientName", e.target.value)}
+                    className="input-field"
+                    required
+                  />
                 </div>
                 <div>
-                  <label className="label">{t('admin.workorderForm.clientCompany')}</label>
-                  <input type="text" value={form.clientCompany} onChange={(e) => update('clientCompany', e.target.value)} className="input-field" />
+                  <label className="label">
+                    {t("admin.workorderForm.clientCompany")}
+                  </label>
+                  <input
+                    type="text"
+                    value={form.clientCompany}
+                    onChange={(e) => update("clientCompany", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">{t('admin.workorderForm.clientEmail')}</label>
-                  <input type="email" value={form.clientEmail} onChange={(e) => update('clientEmail', e.target.value)} className="input-field" />
+                  <label className="label">
+                    {t("admin.workorderForm.clientEmail")}
+                  </label>
+                  <input
+                    type="email"
+                    value={form.clientEmail}
+                    onChange={(e) => update("clientEmail", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div>
-                  <label className="label">{t('admin.workorderForm.clientPhone')}</label>
-                  <input type="text" value={form.clientPhone} onChange={(e) => update('clientPhone', e.target.value)} className="input-field" />
+                  <label className="label">
+                    {t("admin.workorderForm.clientPhone")}
+                  </label>
+                  <input
+                    type="text"
+                    value={form.clientPhone}
+                    onChange={(e) => update("clientPhone", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
               </div>
               <div>
-                <label className="label">{t('admin.workorderForm.description')}</label>
-                <textarea value={form.description} onChange={(e) => update('description', e.target.value)} className="input-field" rows={3} />
+                <label className="label">
+                  {t("admin.workorderForm.description")}
+                </label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => update("description", e.target.value)}
+                  className="input-field"
+                  rows={3}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">{t('admin.workorderForm.priority')}</label>
-                  <select value={form.priority} onChange={(e) => update('priority', e.target.value)} className="input-field">
-                    <option value="LOW">{t('priority.LOW')}</option>
-                    <option value="MEDIUM">{t('priority.MEDIUM')}</option>
-                    <option value="HIGH">{t('priority.HIGH')}</option>
-                    <option value="URGENT">{t('priority.URGENT')}</option>
+                  <label className="label">
+                    {t("admin.workorderForm.priority")}
+                  </label>
+                  <select
+                    value={form.priority}
+                    onChange={(e) => update("priority", e.target.value)}
+                    className="input-field"
+                  >
+                    <option value="LOW">{t("priority.LOW")}</option>
+                    <option value="MEDIUM">{t("priority.MEDIUM")}</option>
+                    <option value="HIGH">{t("priority.HIGH")}</option>
+                    <option value="URGENT">{t("priority.URGENT")}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="label">{t('admin.workorderForm.dueDate')}</label>
-                  <input type="date" value={form.dueDate} onChange={(e) => update('dueDate', e.target.value)} className="input-field" />
+                  <label className="label">
+                    {t("admin.workorderForm.dueDate")}
+                  </label>
+                  <input
+                    type="date"
+                    value={form.dueDate}
+                    onChange={(e) => update("dueDate", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
               </div>
               <div>
-                <label className="label">{t('admin.workorderForm.assignedStaff')}</label>
-                <select value={form.assignedStaffId} onChange={(e) => update('assignedStaffId', e.target.value)} className="input-field">
-                  <option value="">{t('admin.workorderForm.selectStaff')}</option>
+                <label className="label">
+                  {t("admin.workorderForm.assignedStaff")}
+                </label>
+                <select
+                  value={form.assignedStaffId}
+                  onChange={(e) => update("assignedStaffId", e.target.value)}
+                  className="input-field"
+                >
+                  <option value="">
+                    {t("admin.workorderForm.selectStaff")}
+                  </option>
                   {staff.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="label">{t('admin.workorderForm.password')} *</label>
-                <input type="text" value={form.password} onChange={(e) => update('password', e.target.value)} className="input-field" required minLength={6} />
-                <p className="mt-1 text-xs text-gray-400">{t('admin.workorderForm.passwordHint')}</p>
+                <label className="label">
+                  {t("admin.workorderForm.password")} *
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={form.password}
+                    onChange={(e) => update("password", e.target.value)}
+                    className="input-field flex-1"
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const chars =
+                        "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+                      let pw = "";
+                      for (let i = 0; i < 8; i++)
+                        pw += chars.charAt(
+                          Math.floor(Math.random() * chars.length),
+                        );
+                      update("password", pw);
+                    }}
+                    className="btn-secondary whitespace-nowrap"
+                    title={t("admin.workorderForm.generatePassword")}
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-gray-400">
+                  {t("admin.workorderForm.passwordHint")}
+                </p>
               </div>
 
-              {error && <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>}
+              {error && (
+                <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                  {error}
+                </div>
+              )}
 
               <div className="flex gap-3 justify-end pt-2">
-                <button type="button" onClick={onClose} className="btn-secondary">{t('common.cancel')}</button>
-                <button type="submit" disabled={loading} className="btn-primary">
-                  {loading ? t('common.loading') : t('common.create')}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="btn-secondary"
+                >
+                  {t("common.cancel")}
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-primary"
+                >
+                  {loading ? t("common.loading") : t("common.create")}
                 </button>
               </div>
             </form>

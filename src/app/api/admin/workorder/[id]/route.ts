@@ -1,21 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getAdminSession } from '@/lib/auth';
-import { workorderService } from '@/services/workorder.service';
-import { commentService } from '@/services/comment.service';
-import { updateWorkOrderSchema, commentSchema } from '@/lib/validators';
-import { staffRepository } from '@/repositories/staff.repository';
-import { WorkOrderStatus } from '@prisma/client';
+import { NextRequest, NextResponse } from "next/server";
+import { getAdminSession } from "@/lib/auth";
+import { workorderService } from "@/services/workorder.service";
+import { commentService } from "@/services/comment.service";
+import { updateWorkOrderSchema, commentSchema } from "@/lib/validators";
+import { staffRepository } from "@/repositories/staff.repository";
+import { workorderRepository } from "@/repositories/workorder.repository";
+import { WorkOrderStatus } from "@prisma/client";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getAdminSession();
     if (!session) {
       return NextResponse.json(
-        { success: false, error: 'unauthorized' },
-        { status: 401 }
+        { success: false, error: "unauthorized" },
+        { status: 401 },
       );
     }
 
@@ -23,8 +24,8 @@ export async function GET(
     const data = await workorderService.getAdminView(id);
     if (!data) {
       return NextResponse.json(
-        { success: false, error: 'notFound' },
-        { status: 404 }
+        { success: false, error: "notFound" },
+        { status: 404 },
       );
     }
 
@@ -33,24 +34,24 @@ export async function GET(
 
     return NextResponse.json({ success: true, data, staff });
   } catch (error) {
-    console.error('Get admin workorder error:', error);
+    console.error("Get admin workorder error:", error);
     return NextResponse.json(
-      { success: false, error: 'serverError' },
-      { status: 500 }
+      { success: false, error: "serverError" },
+      { status: 500 },
     );
   }
 }
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getAdminSession();
     if (!session) {
       return NextResponse.json(
-        { success: false, error: 'unauthorized' },
-        { status: 401 }
+        { success: false, error: "unauthorized" },
+        { status: 401 },
       );
     }
 
@@ -60,8 +61,12 @@ export async function PATCH(
 
     if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'validation', details: parsed.error.flatten() },
-        { status: 400 }
+        {
+          success: false,
+          error: "validation",
+          details: parsed.error.flatten(),
+        },
+        { status: 400 },
       );
     }
 
@@ -74,20 +79,20 @@ export async function PATCH(
           id,
           status as WorkOrderStatus,
           session.staffId,
-          statusNote
+          statusNote,
         );
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Unknown error';
+        const message = err instanceof Error ? err.message : "Unknown error";
         return NextResponse.json(
-          { success: false, error: 'invalidTransition', message },
-          { status: 400 }
+          { success: false, error: "invalidTransition", message },
+          { status: 400 },
         );
       }
     }
 
     // Handle other field updates
     const fieldsToUpdate = Object.fromEntries(
-      Object.entries(updateData).filter(([, v]) => v !== undefined)
+      Object.entries(updateData).filter(([, v]) => v !== undefined),
     );
     if (Object.keys(fieldsToUpdate).length > 0) {
       await workorderService.update(id, fieldsToUpdate);
@@ -96,10 +101,10 @@ export async function PATCH(
     const updated = await workorderService.getAdminView(id);
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
-    console.error('Update workorder error:', error);
+    console.error("Update workorder error:", error);
     return NextResponse.json(
-      { success: false, error: 'serverError' },
-      { status: 500 }
+      { success: false, error: "serverError" },
+      { status: 500 },
     );
   }
 }
@@ -107,14 +112,14 @@ export async function PATCH(
 // Add comment (staff)
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getAdminSession();
     if (!session) {
       return NextResponse.json(
-        { success: false, error: 'unauthorized' },
-        { status: 401 }
+        { success: false, error: "unauthorized" },
+        { status: 401 },
       );
     }
 
@@ -124,8 +129,8 @@ export async function POST(
 
     if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'validation' },
-        { status: 400 }
+        { success: false, error: "validation" },
+        { status: 400 },
       );
     }
 
@@ -133,17 +138,42 @@ export async function POST(
     const comment = await commentService.addStaffComment(
       id,
       session.staffId,
-      staff?.name || 'Staff',
+      staff?.name || "Staff",
       parsed.data.content,
-      parsed.data.isInternal
+      parsed.data.isInternal,
     );
 
     return NextResponse.json({ success: true, data: comment });
   } catch (error) {
-    console.error('Staff comment error:', error);
+    console.error("Staff comment error:", error);
     return NextResponse.json(
-      { success: false, error: 'serverError' },
-      { status: 500 }
+      { success: false, error: "serverError" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const session = await getAdminSession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: "unauthorized" },
+        { status: 401 },
+      );
+    }
+
+    const { id } = await params;
+    await workorderRepository.delete(id);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Delete workorder error:", error);
+    return NextResponse.json(
+      { success: false, error: "serverError" },
+      { status: 500 },
     );
   }
 }

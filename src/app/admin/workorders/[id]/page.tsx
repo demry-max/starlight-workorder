@@ -25,6 +25,7 @@ export default function AdminWorkOrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [statusNote, setStatusNote] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
 
   // Valid next statuses from current
   const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -72,6 +73,7 @@ export default function AdminWorkOrderDetailPage() {
       if (data.success) {
         setOrder(data.data);
         setStatusNote("");
+        setSelectedStatus(null);
       }
     } finally {
       setUpdating(false);
@@ -90,6 +92,15 @@ export default function AdminWorkOrderDetailPage() {
     } catch {
       /* ignore */
     }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(t("admin.workorders.confirmDelete"))) return;
+    const res = await fetch(`/api/admin/workorder/${params.id}`, {
+      method: "DELETE",
+    });
+    const data = await res.json();
+    if (data.success) router.push("/admin/workorders");
   };
 
   const handleComment = async (content: string, isInternal?: boolean) => {
@@ -165,6 +176,9 @@ export default function AdminWorkOrderDetailPage() {
               {t("admin.workorders.overdue")}
             </span>
           )}
+          <button onClick={handleDelete} className="btn-danger text-sm">
+            {t("common.delete")}
+          </button>
         </div>
       </div>
 
@@ -177,25 +191,21 @@ export default function AdminWorkOrderDetailPage() {
               <h3 className="text-sm font-medium text-gray-500 mb-3">
                 {t("admin.detail.updateStatus")}
               </h3>
-              <div className="flex flex-wrap gap-2 mb-3">
+              <select
+                value={selectedStatus || ""}
+                onChange={(e) => setSelectedStatus(e.target.value || null)}
+                className="input-field mb-3"
+              >
+                <option value="">{t("admin.detail.selectStatus")}</option>
                 {nextStatuses.map((s) => {
                   const config = STATUS_CONFIG[s as WorkOrderStatus];
                   return (
-                    <button
-                      key={s}
-                      onClick={() => handleStatusUpdate(s)}
-                      disabled={updating}
-                      className="rounded-lg border px-3 py-1.5 text-sm font-medium transition hover:shadow"
-                      style={{
-                        borderColor: config?.color,
-                        color: config?.color,
-                      }}
-                    >
+                    <option key={s} value={s}>
                       {locale === "zh" ? config?.labelZh : config?.labelEn}
-                    </button>
+                    </option>
                   );
                 })}
-              </div>
+              </select>
               <input
                 type="text"
                 value={statusNote}
@@ -203,6 +213,15 @@ export default function AdminWorkOrderDetailPage() {
                 placeholder={t("admin.detail.statusNote")}
                 className="input-field"
               />
+              {selectedStatus && (
+                <button
+                  onClick={() => handleStatusUpdate(selectedStatus)}
+                  disabled={updating}
+                  className="btn-primary mt-3 w-full"
+                >
+                  {updating ? t("common.loading") : t("common.save")}
+                </button>
+              )}
             </div>
           )}
 
@@ -296,9 +315,18 @@ export default function AdminWorkOrderDetailPage() {
             <h3 className="text-sm font-medium text-gray-500 mb-2">
               {t("admin.workorderForm.description")}
             </h3>
-            <p className="text-sm text-gray-700 whitespace-pre-wrap">
-              {(order.description as string) || t("common.noData")}
-            </p>
+            <textarea
+              defaultValue={(order.description as string) || ""}
+              onBlur={(e) => {
+                const val = e.target.value;
+                if (val !== (order.description || "")) {
+                  handleFieldUpdate("description", val);
+                }
+              }}
+              className="input-field resize-none"
+              rows={4}
+              placeholder={t("admin.workorderForm.description")}
+            />
           </div>
 
           {/* Comments */}

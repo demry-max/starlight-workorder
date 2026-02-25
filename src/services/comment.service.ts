@@ -1,16 +1,20 @@
-import { commentRepository } from '@/repositories/comment.repository';
-import { sanitizeInput } from '@/lib/validators';
-import { notificationService } from './notification.service';
-import { workorderRepository } from '@/repositories/workorder.repository';
-import type { AuthorType } from '@prisma/client';
+import { commentRepository } from "@/repositories/comment.repository";
+import { sanitizeInput } from "@/lib/validators";
+import { notificationService } from "./notification.service";
+import { workorderRepository } from "@/repositories/workorder.repository";
+import type { AuthorType } from "@prisma/client";
 
 export const commentService = {
-  async addClientComment(workOrderId: string, content: string, clientName: string) {
+  async addClientComment(
+    workOrderId: string,
+    content: string,
+    clientName: string,
+  ) {
     const sanitized = sanitizeInput(content);
 
     const comment = await commentRepository.create({
       workOrderId,
-      authorType: 'CLIENT' as AuthorType,
+      authorType: "CLIENT" as AuthorType,
       authorName: clientName,
       content: sanitized,
       isInternal: false,
@@ -21,7 +25,7 @@ export const commentService = {
       notificationService.onNewComment({
         workOrderId,
         workorderNumber: order.workorderNumber,
-        authorType: 'CLIENT',
+        authorType: "CLIENT",
         content: sanitized,
       });
     }
@@ -34,13 +38,13 @@ export const commentService = {
     staffId: string,
     staffName: string,
     content: string,
-    isInternal: boolean
+    isInternal: boolean,
   ) {
     const sanitized = sanitizeInput(content);
 
     const comment = await commentRepository.create({
       workOrderId,
-      authorType: 'STAFF' as AuthorType,
+      authorType: "STAFF" as AuthorType,
       authorId: staffId,
       authorName: staffName,
       content: sanitized,
@@ -53,8 +57,9 @@ export const commentService = {
         notificationService.onNewComment({
           workOrderId,
           workorderNumber: order.workorderNumber,
-          authorType: 'STAFF',
+          authorType: "STAFF",
           content: sanitized,
+          clientEmail: order.clientEmail,
         });
       }
     }

@@ -1,13 +1,12 @@
 'use client';
 
 import { useTranslation } from '@/i18n/context';
-import { STATUS_CONFIG } from '@/types';
-import type { WorkOrderStatus } from '@/types';
+import { useStatusConfig } from '@/hooks/useStatusConfig';
 
 interface TimelineEntry {
   id: string;
-  oldStatus: WorkOrderStatus | null;
-  newStatus: WorkOrderStatus;
+  oldStatus: string | null;
+  newStatus: string;
   note: string | null;
   createdAt: string;
 }
@@ -18,6 +17,7 @@ interface StatusTimelineProps {
 
 export function StatusTimeline({ entries }: StatusTimelineProps) {
   const { t, locale } = useTranslation();
+  const { configs } = useStatusConfig();
 
   if (entries.length === 0) {
     return <p className="text-sm text-gray-500">{t('common.noData')}</p>;
@@ -27,7 +27,7 @@ export function StatusTimeline({ entries }: StatusTimelineProps) {
     <div className="flow-root">
       <ul className="-mb-8">
         {entries.map((entry, idx) => {
-          const config = STATUS_CONFIG[entry.newStatus];
+          const config = configs[entry.newStatus];
           const isLast = idx === entries.length - 1;
 
           return (
@@ -49,9 +49,9 @@ export function StatusTimeline({ entries }: StatusTimelineProps) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium text-gray-900">
-                      {locale === 'zh'
-                        ? config?.labelZh || entry.newStatus
-                        : config?.labelEn || entry.newStatus}
+                      {config
+                        ? (locale === 'zh' ? config.labelZh : config.labelEn)
+                        : entry.newStatus}
                     </div>
                     {entry.note && (
                       <p className="mt-0.5 text-sm text-gray-500">{entry.note}</p>

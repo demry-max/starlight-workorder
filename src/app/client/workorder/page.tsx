@@ -7,11 +7,13 @@ import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StatusTimeline } from "@/components/StatusTimeline";
 import { CommentThread } from "@/components/CommentThread";
-import type { WorkOrderClientView, WorkOrderStatus } from "@/types";
+import { useStatusConfig } from "@/hooks/useStatusConfig";
+import type { WorkOrderClientView } from "@/types";
 
 export default function ClientWorkOrderPage() {
   const { t, locale } = useTranslation();
   const router = useRouter();
+  const { isTerminal } = useStatusConfig();
   const [order, setOrder] = useState<WorkOrderClientView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -63,7 +65,7 @@ export default function ClientWorkOrderPage() {
   const isOverdue =
     order?.dueDate &&
     new Date(order.dueDate) < new Date() &&
-    !["COMPLETED", "CLOSED", "CANCELLED"].includes(order.status);
+    !isTerminal(order.status);
 
   if (loading) {
     return (
@@ -128,7 +130,7 @@ export default function ClientWorkOrderPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <StatusBadge status={order.status as WorkOrderStatus} />
+              <StatusBadge status={order.status} />
               {isOverdue && (
                 <span className="rounded-full bg-red-100 px-2.5 py-1 text-sm font-medium text-red-700">
                   {t("client.workorder.overdue")}

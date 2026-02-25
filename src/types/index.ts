@@ -1,90 +1,130 @@
-import { WorkOrderStatus, Priority, StaffRole, AuthorType } from '@prisma/client';
+import { Priority, StaffRole, AuthorType } from '@prisma/client';
 
-export { WorkOrderStatus, Priority, StaffRole, AuthorType };
+export { Priority, StaffRole, AuthorType };
+
+// WorkOrderStatus is now a string (no longer a Prisma enum)
+export type WorkOrderStatus = string;
 
 // Status configuration with bilingual labels and colors
 export interface StatusConfig {
-  key: WorkOrderStatus;
+  key: string;
   labelEn: string;
   labelZh: string;
-  color: string;
-  bgColor: string;
-  textColor: string;
+  color: string;    // hex color for the dot
+  bgColor: string;  // hex background color
+  textColor: string; // hex text color
   sortOrder: number;
+  defaultProgress: number;
+  isTerminal: boolean;
+  isDefault: boolean;
+  isActive: boolean;
 }
 
-export const STATUS_CONFIG: Record<WorkOrderStatus, StatusConfig> = {
+// Fallback STATUS_CONFIG for use when DB configs aren't loaded yet
+export const STATUS_CONFIG: Record<string, StatusConfig> = {
   DRAFT: {
     key: 'DRAFT',
     labelEn: 'Draft',
     labelZh: '草稿',
     color: '#6B7280',
-    bgColor: 'bg-gray-100',
-    textColor: 'text-gray-700',
+    bgColor: '#F3F4F6',
+    textColor: '#374151',
     sortOrder: 0,
+    defaultProgress: 0,
+    isTerminal: false,
+    isDefault: true,
+    isActive: true,
   },
   RECEIVED: {
     key: 'RECEIVED',
     labelEn: 'Received',
     labelZh: '已接收',
     color: '#3B82F6',
-    bgColor: 'bg-blue-100',
-    textColor: 'text-blue-700',
+    bgColor: '#DBEAFE',
+    textColor: '#1D4ED8',
     sortOrder: 1,
+    defaultProgress: 5,
+    isTerminal: false,
+    isDefault: false,
+    isActive: true,
   },
   IN_PROGRESS: {
     key: 'IN_PROGRESS',
     labelEn: 'In Progress',
     labelZh: '进行中',
     color: '#F59E0B',
-    bgColor: 'bg-amber-100',
-    textColor: 'text-amber-700',
+    bgColor: '#FEF3C7',
+    textColor: '#92400E',
     sortOrder: 2,
+    defaultProgress: 50,
+    isTerminal: false,
+    isDefault: false,
+    isActive: true,
   },
   WAITING_FOR_CLIENT: {
     key: 'WAITING_FOR_CLIENT',
     labelEn: 'Waiting for Client',
     labelZh: '等待客户',
     color: '#F97316',
-    bgColor: 'bg-orange-100',
-    textColor: 'text-orange-700',
+    bgColor: '#FFEDD5',
+    textColor: '#9A3412',
     sortOrder: 3,
+    defaultProgress: -1,
+    isTerminal: false,
+    isDefault: false,
+    isActive: true,
   },
   WAITING_FOR_THIRD_PARTY: {
     key: 'WAITING_FOR_THIRD_PARTY',
     labelEn: 'Waiting for Third Party',
     labelZh: '等待第三方',
     color: '#8B5CF6',
-    bgColor: 'bg-purple-100',
-    textColor: 'text-purple-700',
+    bgColor: '#EDE9FE',
+    textColor: '#5B21B6',
     sortOrder: 4,
+    defaultProgress: -1,
+    isTerminal: false,
+    isDefault: false,
+    isActive: true,
   },
   COMPLETED: {
     key: 'COMPLETED',
     labelEn: 'Completed',
     labelZh: '已完成',
     color: '#10B981',
-    bgColor: 'bg-green-100',
-    textColor: 'text-green-700',
+    bgColor: '#D1FAE5',
+    textColor: '#065F46',
     sortOrder: 5,
+    defaultProgress: 100,
+    isTerminal: true,
+    isDefault: false,
+    isActive: true,
   },
   CLOSED: {
     key: 'CLOSED',
     labelEn: 'Closed',
     labelZh: '已关闭',
     color: '#4B5563',
-    bgColor: 'bg-gray-200',
-    textColor: 'text-gray-600',
+    bgColor: '#E5E7EB',
+    textColor: '#1F2937',
     sortOrder: 6,
+    defaultProgress: 100,
+    isTerminal: true,
+    isDefault: false,
+    isActive: true,
   },
   CANCELLED: {
     key: 'CANCELLED',
     labelEn: 'Cancelled',
     labelZh: '已取消',
     color: '#EF4444',
-    bgColor: 'bg-red-100',
-    textColor: 'text-red-700',
+    bgColor: '#FEE2E2',
+    textColor: '#991B1B',
     sortOrder: 7,
+    defaultProgress: -1,
+    isTerminal: true,
+    isDefault: false,
+    isActive: true,
   },
 };
 
@@ -127,7 +167,7 @@ export interface DashboardStats {
   overdue: number;
   waitingForClient: number;
   completedThisWeek: number;
-  byStatus: { status: WorkOrderStatus; count: number }[];
+  byStatus: { status: string; count: number }[];
   staffWorkload: { staffId: string; staffName: string; count: number }[];
 }
 
@@ -137,7 +177,7 @@ export interface WorkOrderClientView {
   workorderNumber: string;
   clientName: string;
   clientCompany: string | null;
-  status: WorkOrderStatus;
+  status: string;
   progressPercentage: number;
   priority: Priority;
   assignedStaffName: string | null;
@@ -147,8 +187,8 @@ export interface WorkOrderClientView {
   updatedAt: string;
   statusHistory: {
     id: string;
-    oldStatus: WorkOrderStatus | null;
-    newStatus: WorkOrderStatus;
+    oldStatus: string | null;
+    newStatus: string;
     note: string | null;
     createdAt: string;
   }[];

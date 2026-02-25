@@ -1,6 +1,6 @@
 # Starlight WorkOrder Portal
 
-A production-ready bilingual (English + Simplified Chinese) work order management system for Starlight Business Consulting.
+A production-ready bilingual (English + Simplified Chinese) work order management system for Starlight Business Consulting (星耀财税).
 
 ## Features
 
@@ -8,8 +8,13 @@ A production-ready bilingual (English + Simplified Chinese) work order managemen
 - **Admin Dashboard** - Staff manage work orders, view analytics, and update statuses
 - **Bilingual** - Full English & Simplified Chinese support with one-click switching
 - **Status State Machine** - Enforced status transitions with full audit trail
+- **Email Notifications** - SMTP email notifications on work order creation, status updates, and comments
+- **SMTP Settings UI** - Configure SMTP from the admin panel (no env vars needed)
+- **Password Reset** - Admins can reset client passwords from the work order detail page
+- **CSV Export** - Export filtered work orders as CSV with confirmation dialog
+- **Admin Guide** - Built-in bilingual "How to Use" guide for admins
+- **Audit Logging** - Full audit trail for all system operations
 - **Feishu Ready** - Prepared for Feishu Base integration as source of truth
-- **Notification Hooks** - Abstraction layer for email & webhook notifications
 
 ## Tech Stack
 
@@ -82,9 +87,14 @@ src/
 ├── app/                    # Next.js App Router
 │   ├── api/               # API Routes (Controllers)
 │   │   ├── admin/         # Admin endpoints
+│   │   │   ├── settings/  # SMTP settings API
+│   │   │   └── ...
 │   │   ├── client/        # Client endpoints
 │   │   └── auth/          # Auth endpoints
 │   ├── admin/             # Admin pages
+│   │   ├── guide/         # Admin guide page
+│   │   ├── settings/      # SMTP settings page
+│   │   └── ...
 │   └── client/            # Client pages
 ├── components/            # React components
 ├── i18n/                  # Internationalization
@@ -126,11 +136,16 @@ src/
 | GET | `/api/admin/workorders?export=csv` | Export as CSV |
 | POST | `/api/admin/workorders` | Create work order |
 | GET | `/api/admin/workorder/:id` | Get work order details |
-| PATCH | `/api/admin/workorder/:id` | Update work order |
+| PATCH | `/api/admin/workorder/:id` | Update work order (incl. password reset) |
 | POST | `/api/admin/workorder/:id` | Add comment |
+| DELETE | `/api/admin/workorder/:id` | Delete work order |
 | GET | `/api/admin/dashboard` | Dashboard statistics |
+| GET | `/api/admin/settings` | Get SMTP settings |
+| PUT | `/api/admin/settings` | Update SMTP settings |
+| POST | `/api/admin/settings` | Send test email |
 | POST | `/api/admin/sync-feishu` | Trigger Feishu sync |
 | GET | `/api/admin/staff` | List staff members |
+| GET | `/api/admin/logs` | Audit logs (paginated) |
 
 ## Status Flow
 
@@ -142,6 +157,25 @@ DRAFT → RECEIVED → IN_PROGRESS → COMPLETED → CLOSED
 
 Any active status → CANCELLED (terminal)
 ```
+
+## Email Notifications
+
+SMTP can be configured via:
+1. **Admin UI** (Settings page) - stored in the database `SystemSetting` table
+2. **Environment variables** - fallback when no DB settings exist
+
+```env
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=user@example.com
+SMTP_PASS=your_password
+SMTP_FROM=Starlight WorkOrder <noreply@example.com>
+```
+
+Emails are sent when:
+- A work order is created (credentials sent to client)
+- A work order status changes
+- Staff replies to a client comment
 
 ## Feishu Integration
 
@@ -169,7 +203,8 @@ FEISHU_TABLE_ID=your_table_id
 - XSS input sanitization
 - CSRF protection via SameSite cookies
 - Security headers (X-Frame-Options, X-Content-Type-Options, etc.)
+- Full audit logging for all admin operations
 
 ## License
 
-Proprietary - Starlight Business Consulting
+Proprietary - Starlight Business Consulting (星耀财税)

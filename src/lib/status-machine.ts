@@ -1,45 +1,63 @@
-import { WorkOrderStatus } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 
-// Define valid status transitions (Finite State Machine)
-const VALID_TRANSITIONS: Record<WorkOrderStatus, WorkOrderStatus[]> = {
-  DRAFT: ['RECEIVED', 'CANCELLED'],
-  RECEIVED: ['IN_PROGRESS', 'CANCELLED'],
-  IN_PROGRESS: [
-    'WAITING_FOR_CLIENT',
-    'WAITING_FOR_THIRD_PARTY',
-    'COMPLETED',
-    'CANCELLED',
-  ],
-  WAITING_FOR_CLIENT: ['IN_PROGRESS', 'CANCELLED'],
-  WAITING_FOR_THIRD_PARTY: ['IN_PROGRESS', 'CANCELLED'],
-  COMPLETED: ['CLOSED'],
-  CLOSED: [],
-  CANCELLED: [],
-};
-
-export function isValidTransition(
-  from: WorkOrderStatus,
-  to: WorkOrderStatus
-): boolean {
-  return VALID_TRANSITIONS[from]?.includes(to) ?? false;
+// Fetch valid transitions from the database
+export async function isValidTransition(
+  from: string,
+  to: string
+): Promise<boolean> {
+  const count = await prisma.statusTransition.count({
+    where: { fromStatusKey: from, toStatusKey: to },
+  });
+  return count > 0;
 }
 
-export function getValidNextStatuses(current: WorkOrderStatus): WorkOrderStatus[] {
-  return VALID_TRANSITIONS[current] || [];
+export async function getValidNextStatuses(current: string): Promise<string[]> {
+  const transitions = await prisma.statusTransition.findMany({
+    where: { fromStatusKey: current },
+    select: { toStatusKey: true },
+  });
+  return transitions.map((t) => t.toStatusKey);
 }
 
-export function isTerminalStatus(status: WorkOrderStatus): boolean {
-  return status === 'CLOSED' || status === 'CANCELLED';
+export async function isTerminalStatus(status: string): Promise<boolean> {
+  const config = await prisma.statusConfig.findUnique({
+    where: { key: status },
+    select: { isTerminal: true },
+  });
+  return config?.isTerminal ?? false;
 }
 
-// Default progress percentages for each status
-export const STATUS_DEFAULT_PROGRESS: Record<WorkOrderStatus, number> = {
-  DRAFT: 0,
-  RECEIVED: 5,
-  IN_PROGRESS: 50,
-  WAITING_FOR_CLIENT: -1, // -1 means don't auto-update
-  WAITING_FOR_THIRD_PARTY: -1,
-  COMPLETED: 100,
-  CLOSED: 100,
-  CANCELLED: -1,
-};
+export async function getTerminalStatusKeys(): Promise<string[]> {
+  const configs = await prisma.statusConfig.findMany({
+    where: { isTerminal: true, isActive: true },
+    select: { key: true },
+  });
+  return configs.map((c) => c.key);
+}
+
+export async function getDefaultStatus(): Promise<string> {
+  const config = await prisma.statusConfig.findFirst({
+    where: { isDefault: true, isActive: true },
+    select: { key: true },
+  });
+  return config?.key ?? 'DRAFT';
+}
+
+export async function getDefaultProgress(statusKey: string): Promise<number> {
+  const config = await prisma.statusConfig.findUnique({
+    where: { key: statusKey },
+    select: { defaultProgress: true },
+  });
+  return config?.defaultProgress ?? -1;
+}
+
+export async function getAllStatusConfigs() {
+  return prisma.statusConfig.findMany({
+    where: { isActive: true },
+    orderBy: { sortOrder: 'asc' },
+  });
+}
+
+export async function getAllTransitions() {
+  return prisma.statusTransition.findMany();
+}

@@ -1,9 +1,4 @@
-import {
-  PrismaClient,
-  WorkOrderStatus,
-  Priority,
-  StaffRole,
-} from "@prisma/client";
+import { PrismaClient, Priority, StaffRole } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
 import * as crypto from "crypto";
 
@@ -15,6 +10,139 @@ function generateWorkOrderNumber(): string {
 
 async function main() {
   console.log("Seeding database...");
+
+  // Seed status configs
+  const statusConfigs = [
+    {
+      key: "DRAFT",
+      labelEn: "Draft",
+      labelZh: "草稿",
+      color: "#6B7280",
+      bgColor: "#F3F4F6",
+      textColor: "#374151",
+      sortOrder: 0,
+      defaultProgress: 0,
+      isTerminal: false,
+      isDefault: true,
+    },
+    {
+      key: "RECEIVED",
+      labelEn: "Received",
+      labelZh: "已接收",
+      color: "#3B82F6",
+      bgColor: "#DBEAFE",
+      textColor: "#1D4ED8",
+      sortOrder: 1,
+      defaultProgress: 5,
+      isTerminal: false,
+      isDefault: false,
+    },
+    {
+      key: "IN_PROGRESS",
+      labelEn: "In Progress",
+      labelZh: "进行中",
+      color: "#F59E0B",
+      bgColor: "#FEF3C7",
+      textColor: "#92400E",
+      sortOrder: 2,
+      defaultProgress: 50,
+      isTerminal: false,
+      isDefault: false,
+    },
+    {
+      key: "WAITING_FOR_CLIENT",
+      labelEn: "Waiting for Client",
+      labelZh: "等待客户",
+      color: "#F97316",
+      bgColor: "#FFEDD5",
+      textColor: "#9A3412",
+      sortOrder: 3,
+      defaultProgress: -1,
+      isTerminal: false,
+      isDefault: false,
+    },
+    {
+      key: "WAITING_FOR_THIRD_PARTY",
+      labelEn: "Waiting for Third Party",
+      labelZh: "等待第三方",
+      color: "#8B5CF6",
+      bgColor: "#EDE9FE",
+      textColor: "#5B21B6",
+      sortOrder: 4,
+      defaultProgress: -1,
+      isTerminal: false,
+      isDefault: false,
+    },
+    {
+      key: "COMPLETED",
+      labelEn: "Completed",
+      labelZh: "已完成",
+      color: "#10B981",
+      bgColor: "#D1FAE5",
+      textColor: "#065F46",
+      sortOrder: 5,
+      defaultProgress: 100,
+      isTerminal: true,
+      isDefault: false,
+    },
+    {
+      key: "CLOSED",
+      labelEn: "Closed",
+      labelZh: "已关闭",
+      color: "#4B5563",
+      bgColor: "#E5E7EB",
+      textColor: "#1F2937",
+      sortOrder: 6,
+      defaultProgress: 100,
+      isTerminal: true,
+      isDefault: false,
+    },
+    {
+      key: "CANCELLED",
+      labelEn: "Cancelled",
+      labelZh: "已取消",
+      color: "#EF4444",
+      bgColor: "#FEE2E2",
+      textColor: "#991B1B",
+      sortOrder: 7,
+      defaultProgress: -1,
+      isTerminal: true,
+      isDefault: false,
+    },
+  ];
+
+  for (const config of statusConfigs) {
+    await prisma.statusConfig.upsert({
+      where: { key: config.key },
+      update: config,
+      create: config,
+    });
+  }
+  console.log("Status configs seeded.");
+
+  // Seed status transitions
+  const transitions = [
+    { fromStatusKey: "DRAFT", toStatusKey: "RECEIVED" },
+    { fromStatusKey: "DRAFT", toStatusKey: "CANCELLED" },
+    { fromStatusKey: "RECEIVED", toStatusKey: "IN_PROGRESS" },
+    { fromStatusKey: "RECEIVED", toStatusKey: "CANCELLED" },
+    { fromStatusKey: "IN_PROGRESS", toStatusKey: "WAITING_FOR_CLIENT" },
+    { fromStatusKey: "IN_PROGRESS", toStatusKey: "WAITING_FOR_THIRD_PARTY" },
+    { fromStatusKey: "IN_PROGRESS", toStatusKey: "COMPLETED" },
+    { fromStatusKey: "IN_PROGRESS", toStatusKey: "CANCELLED" },
+    { fromStatusKey: "WAITING_FOR_CLIENT", toStatusKey: "IN_PROGRESS" },
+    { fromStatusKey: "WAITING_FOR_CLIENT", toStatusKey: "CANCELLED" },
+    { fromStatusKey: "WAITING_FOR_THIRD_PARTY", toStatusKey: "IN_PROGRESS" },
+    { fromStatusKey: "WAITING_FOR_THIRD_PARTY", toStatusKey: "CANCELLED" },
+    { fromStatusKey: "COMPLETED", toStatusKey: "CLOSED" },
+  ];
+
+  // Clear existing transitions and re-create
+  await prisma.statusTransition.deleteMany({});
+  for (const t of transitions) {
+    await prisma.statusTransition.create({ data: t });
+  }
+  console.log("Status transitions seeded.");
 
   // Create admin user
   const adminPassword = await bcrypt.hash("admin123", 12);
@@ -62,7 +190,7 @@ async function main() {
       clientCompany: "Acme Corp",
       clientEmail: "john@acme.com",
       clientPhone: "+1-555-0100",
-      status: WorkOrderStatus.IN_PROGRESS,
+      status: "IN_PROGRESS",
       progressPercentage: 45,
       priority: Priority.HIGH,
       assignedStaffId: staff1.id,
@@ -76,7 +204,7 @@ async function main() {
       clientName: "Wang Fang",
       clientCompany: "TechStart Ltd",
       clientEmail: "wang@techstart.cn",
-      status: WorkOrderStatus.WAITING_FOR_CLIENT,
+      status: "WAITING_FOR_CLIENT",
       progressPercentage: 30,
       priority: Priority.MEDIUM,
       assignedStaffId: staff2.id,
@@ -90,7 +218,7 @@ async function main() {
       clientCompany: "Global Trade Inc",
       clientEmail: "sarah@globaltrade.com",
       clientPhone: "+86-138-0000-1234",
-      status: WorkOrderStatus.COMPLETED,
+      status: "COMPLETED",
       progressPercentage: 100,
       priority: Priority.LOW,
       assignedStaffId: staff1.id,
@@ -102,7 +230,7 @@ async function main() {
       passwordHash: await bcrypt.hash("client004", 12),
       clientName: "David Liu",
       clientCompany: "Innovation Labs",
-      status: WorkOrderStatus.RECEIVED,
+      status: "RECEIVED",
       progressPercentage: 5,
       priority: Priority.URGENT,
       assignedStaffId: admin.id,
@@ -119,17 +247,17 @@ async function main() {
       data: {
         workOrderId: created.id,
         oldStatus: null,
-        newStatus: WorkOrderStatus.DRAFT,
+        newStatus: "DRAFT",
         changedBy: admin.id,
         note: "Work order created",
       },
     });
 
-    if ((order.status as string) !== "DRAFT") {
+    if (order.status !== "DRAFT") {
       await prisma.workOrderStatusHistory.create({
         data: {
           workOrderId: created.id,
-          oldStatus: WorkOrderStatus.DRAFT,
+          oldStatus: "DRAFT",
           newStatus: order.status,
           changedBy: admin.id,
           note: `Status updated to ${order.status}`,

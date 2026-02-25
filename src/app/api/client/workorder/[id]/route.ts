@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClientSession } from '@/lib/auth';
 import { workorderService } from '@/services/workorder.service';
+import { auditLog, getIp } from '@/lib/logger';
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -32,6 +33,14 @@ export async function GET(
         { status: 404 }
       );
     }
+
+    await auditLog({
+      action: 'workorder.client_view',
+      actor: `client:${session.workorderNumber}`,
+      targetType: 'workorder',
+      targetId: id,
+      ip: getIp(request),
+    });
 
     return NextResponse.json({ success: true, data });
   } catch (error) {

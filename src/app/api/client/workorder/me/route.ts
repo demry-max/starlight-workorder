@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getClientSession } from '@/lib/auth';
 import { workorderService } from '@/services/workorder.service';
+import { auditLog, getIp } from '@/lib/logger';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await getClientSession();
     if (!session) {
@@ -19,6 +20,14 @@ export async function GET() {
         { status: 404 }
       );
     }
+
+    await auditLog({
+      action: 'workorder.client_view',
+      actor: `client:${session.workorderNumber}`,
+      targetType: 'workorder',
+      targetId: session.workOrderId,
+      ip: getIp(request),
+    });
 
     return NextResponse.json({ success: true, data });
   } catch (error) {

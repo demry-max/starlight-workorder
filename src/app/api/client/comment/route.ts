@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getClientSession } from '@/lib/auth';
 import { commentService } from '@/services/comment.service';
 import { commentSchema } from '@/lib/validators';
+import { auditLog, getIp } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,6 +38,15 @@ export async function POST(request: NextRequest) {
       parsed.data.content,
       'Client'
     );
+
+    await auditLog({
+      action: 'comment.client_add',
+      actor: `client:${session.workorderNumber}`,
+      targetType: 'workorder',
+      targetId: parsed.data.workOrderId,
+      detail: { commentId: comment.id },
+      ip: getIp(request),
+    });
 
     return NextResponse.json({ success: true, data: comment });
   } catch (error) {

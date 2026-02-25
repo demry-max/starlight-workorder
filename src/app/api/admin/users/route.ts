@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { getAdminSession } from '@/lib/auth';
 import { staffRepository } from '@/repositories/staff.repository';
 import { createUserSchema } from '@/lib/validators';
+import { auditLog, getIp } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -51,6 +52,16 @@ export async function POST(request: NextRequest) {
       email: parsed.data.email,
       passwordHash,
       role: parsed.data.role,
+    });
+
+    await auditLog({
+      action: 'user.create',
+      actor: session.staffId,
+      actorEmail: session.email,
+      targetType: 'user',
+      targetId: user.id,
+      detail: { email: user.email, role: user.role },
+      ip: getIp(request),
     });
 
     return NextResponse.json({

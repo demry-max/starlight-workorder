@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { authService } from '@/services/auth.service';
-import { clientLoginSchema } from '@/lib/validators';
-import { createCookieHeader } from '@/lib/auth';
+import { NextRequest, NextResponse } from "next/server";
+import { authService } from "@/services/auth.service";
+import { clientLoginSchema } from "@/lib/validators";
+import { createCookieHeader } from "@/lib/auth";
+import { auditLog, getIp } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,40 +11,65 @@ export async function POST(request: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'validation' },
-        { status: 400 }
+        { success: false, error: "validation" },
+        { status: 400 },
       );
     }
 
     const { workorderNumber, password } = parsed.data;
+    const ip = getIp(request);
     const result = await authService.clientLogin(workorderNumber, password);
 
     if (!result.success) {
+      await auditLog({
+        action: "auth.client_login",
+        actor: `client:${workorderNumber}`,
+        targetType: "workorder",
+        detail: { workorderNumber, error: result.error, locked: result.locked },
+        ip,
+        success: false,
+      });
       const status = result.locked ? 429 : 401;
       return NextResponse.json(
         { success: false, error: result.error, locked: result.locked },
-        { status }
+        { status },
       );
     }
+
+    await auditLog({
+      action: "auth.client_login",
+      actor: `client:${workorderNumber}`,
+      targetType: "workorder",
+      detail: { workorderNumber },
+      ip,
+    });
 
     const response = NextResponse.json({ success: true });
 
     // Set httpOnly cookies
     response.headers.append(
-      'Set-Cookie',
-      createCookieHeader('client_token', result.token!, 3600) // 1 hour
+      "Set-Cookie",
+      createCookieHeader("client_token", result.token!, 3600), // 1 hour
     );
     response.headers.append(
-      'Set-Cookie',
-      createCookieHeader('client_refresh', result.refreshToken!, 604800) // 7 days
+      "Set-Cookie",
+      createCookieHeader("client_refresh", result.refreshToken!, 604800), // 7 days
     );
 
     return response;
   } catch (error) {
-    console.error('Client login error:', error);
+    console.error("Client login error:", error);
+    await auditLog({
+      action: "auth.client_login",
+      success: false,
+      detail: {
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      ip: getIp(request),
+    });
     return NextResponse.json(
-      { success: false, error: 'serverError' },
-      { status: 500 }
+      { success: false, error: "serverError" },
+      { status: 500 },
     );
   }
 }

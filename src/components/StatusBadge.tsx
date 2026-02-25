@@ -1,29 +1,34 @@
 'use client';
 
 import { useTranslation } from '@/i18n/context';
-import { STATUS_CONFIG } from '@/types';
-import type { WorkOrderStatus } from '@/types';
+import { useStatusConfig } from '@/hooks/useStatusConfig';
 
 interface StatusBadgeProps {
-  status: WorkOrderStatus;
+  status: string;
   size?: 'sm' | 'md';
 }
 
 export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
   const { locale } = useTranslation();
-  const config = STATUS_CONFIG[status];
-  if (!config) return null;
+  const { configs } = useStatusConfig();
+  const config = configs[status];
 
-  const label = locale === 'zh' ? config.labelZh : config.labelEn;
+  const label = config
+    ? (locale === 'zh' ? config.labelZh : config.labelEn)
+    : status;
   const sizeClasses = size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-sm';
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full font-medium ${config.bgColor} ${config.textColor} ${sizeClasses}`}
+      className={`inline-flex items-center gap-1 rounded-full font-medium ${sizeClasses}`}
+      style={{
+        backgroundColor: config?.bgColor || '#F3F4F6',
+        color: config?.textColor || '#374151',
+      }}
     >
       <span
         className="h-1.5 w-1.5 rounded-full"
-        style={{ backgroundColor: config.color }}
+        style={{ backgroundColor: config?.color || '#6B7280' }}
       />
       {label}
     </span>

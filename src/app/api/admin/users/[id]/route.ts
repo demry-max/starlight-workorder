@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { getAdminSession } from '@/lib/auth';
 import { staffRepository } from '@/repositories/staff.repository';
 import { updateUserSchema } from '@/lib/validators';
+import { auditLog, getIp } from '@/lib/logger';
 
 export async function PATCH(
   request: NextRequest,
@@ -35,6 +36,17 @@ export async function PATCH(
     }
 
     const user = await staffRepository.update(id, updateData);
+
+    await auditLog({
+      action: 'user.update',
+      actor: session.staffId,
+      actorEmail: session.email,
+      targetType: 'user',
+      targetId: id,
+      detail: { fields: Object.keys(updateData).filter(k => k !== 'passwordHash'), email: user.email },
+      ip: getIp(request),
+    });
+
     return NextResponse.json({
       success: true,
       data: { id: user.id, name: user.name, email: user.email, role: user.role, isActive: user.isActive },
@@ -46,7 +58,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -65,7 +77,19 @@ export async function DELETE(
       );
     }
 
+    const user = await staffRepository.findById(id);
     await staffRepository.delete(id);
+
+    await auditLog({
+      action: 'user.delete',
+      actor: session.staffId,
+      actorEmail: session.email,
+      targetType: 'user',
+      targetId: id,
+      detail: { email: user?.email },
+      ip: getIp(request),
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Delete user error:', error);

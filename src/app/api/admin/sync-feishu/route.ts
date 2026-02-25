@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSession } from '@/lib/auth';
 import { feishuService } from '@/services/feishu.service';
+import { auditLog, getIp } from '@/lib/logger';
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const session = await getAdminSession();
     if (!session) {
@@ -20,9 +21,24 @@ export async function POST() {
     }
 
     const result = await feishuService.syncFromFeishu();
+
+    await auditLog({
+      action: 'feishu.sync',
+      actor: session.staffId,
+      actorEmail: session.email,
+      targetType: 'feishu',
+      detail: result,
+      ip: getIp(request),
+    });
+
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
     console.error('Feishu sync error:', error);
+    await auditLog({
+      action: 'feishu.sync',
+      success: false,
+      detail: { error: error instanceof Error ? error.message : 'Unknown error' },
+    });
     return NextResponse.json(
       { success: false, error: 'serverError' },
       { status: 500 }

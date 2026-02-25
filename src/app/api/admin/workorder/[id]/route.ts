@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import { getAdminSession } from "@/lib/auth";
 import { workorderService } from "@/services/workorder.service";
 import { commentService } from "@/services/comment.service";
 import { updateWorkOrderSchema, commentSchema } from "@/lib/validators";
 import { staffRepository } from "@/repositories/staff.repository";
 import { workorderRepository } from "@/repositories/workorder.repository";
-import { WorkOrderStatus } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { auditLog, getIp } from "@/lib/logger";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -29,10 +31,24 @@ export async function GET(
       );
     }
 
-    // Also get staff list for assignment
-    const staff = await staffRepository.findAll();
+    const [staff, salesReps] = await Promise.all([
+      staffRepository.findAll(),
+      prisma.salesRep.findMany({
+        where: { isActive: true },
+        orderBy: { name: "asc" },
+      }),
+    ]);
 
-    return NextResponse.json({ success: true, data, staff });
+    await auditLog({
+      action: "workorder.view",
+      actor: session.staffId,
+      actorEmail: session.email,
+      targetType: "workorder",
+      targetId: id,
+      ip: getIp(request),
+    });
+
+    return NextResponse.json({ success: true, data, staff, salesReps });
   } catch (error) {
     console.error("Get admin workorder error:", error);
     return NextResponse.json(
@@ -70,19 +86,54 @@ export async function PATCH(
       );
     }
 
-    const { status, statusNote, ...updateData } = parsed.data;
+    const { status, statusNote, password, ...updateData } = parsed.data;
+    const ip = getIp(request);
+
+    // Handle password reset
+    if (password) {
+      const passwordHash = await bcrypt.hash(password, 12);
+      await workorderRepository.update(id, { passwordHash });
+      await auditLog({
+        action: "workorder.password_reset",
+        actor: session.staffId,
+        actorEmail: session.email,
+        targetType: "workorder",
+        targetId: id,
+        ip,
+      });
+    }
 
     // Handle status transition
     if (status) {
       try {
+        const existing = await workorderService.getAdminView(id);
         await workorderService.updateStatus(
           id,
-          status as WorkOrderStatus,
+          status,
           session.staffId,
           statusNote,
         );
+        await auditLog({
+          action: "workorder.status_change",
+          actor: session.staffId,
+          actorEmail: session.email,
+          targetType: "workorder",
+          targetId: id,
+          detail: { from: existing?.status, to: status, note: statusNote },
+          ip,
+        });
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
+        await auditLog({
+          action: "workorder.status_change",
+          actor: session.staffId,
+          actorEmail: session.email,
+          targetType: "workorder",
+          targetId: id,
+          detail: { to: status, error: message },
+          ip,
+          success: false,
+        });
         return NextResponse.json(
           { success: false, error: "invalidTransition", message },
           { status: 400 },
@@ -96,6 +147,15 @@ export async function PATCH(
     );
     if (Object.keys(fieldsToUpdate).length > 0) {
       await workorderService.update(id, fieldsToUpdate);
+      await auditLog({
+        action: "workorder.update",
+        actor: session.staffId,
+        actorEmail: session.email,
+        targetType: "workorder",
+        targetId: id,
+        detail: { fields: Object.keys(fieldsToUpdate) },
+        ip,
+      });
     }
 
     const updated = await workorderService.getAdminView(id);
@@ -143,6 +203,16 @@ export async function POST(
       parsed.data.isInternal,
     );
 
+    await auditLog({
+      action: "comment.staff_add",
+      actor: session.staffId,
+      actorEmail: session.email,
+      targetType: "workorder",
+      targetId: id,
+      detail: { commentId: comment.id, isInternal: parsed.data.isInternal },
+      ip: getIp(request),
+    });
+
     return NextResponse.json({ success: true, data: comment });
   } catch (error) {
     console.error("Staff comment error:", error);
@@ -154,7 +224,7 @@ export async function POST(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -168,6 +238,16 @@ export async function DELETE(
 
     const { id } = await params;
     await workorderRepository.delete(id);
+
+    await auditLog({
+      action: "workorder.delete",
+      actor: session.staffId,
+      actorEmail: session.email,
+      targetType: "workorder",
+      targetId: id,
+      ip: getIp(request),
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete workorder error:", error);

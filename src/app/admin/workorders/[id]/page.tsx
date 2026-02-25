@@ -6,8 +6,7 @@ import { useTranslation } from "@/i18n/context";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StatusTimeline } from "@/components/StatusTimeline";
 import { CommentThread } from "@/components/CommentThread";
-import type { WorkOrderStatus } from "@/types";
-import { STATUS_CONFIG } from "@/types";
+import { useStatusConfig } from "@/hooks/useStatusConfig";
 
 interface StaffOption {
   id: string;
@@ -16,33 +15,24 @@ interface StaffOption {
   role: string;
 }
 
+interface SalesRepOption {
+  id: string;
+  name: string;
+}
+
 export default function AdminWorkOrderDetailPage() {
   const { t, locale } = useTranslation();
   const params = useParams();
   const router = useRouter();
+  const { configs, getValidNextStatuses, isTerminal, getLabel } =
+    useStatusConfig();
   const [order, setOrder] = useState<Record<string, unknown> | null>(null);
   const [staff, setStaff] = useState<StaffOption[]>([]);
+  const [salesReps, setSalesReps] = useState<SalesRepOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [statusNote, setStatusNote] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
-
-  // Valid next statuses from current
-  const VALID_TRANSITIONS: Record<string, string[]> = {
-    DRAFT: ["RECEIVED", "CANCELLED"],
-    RECEIVED: ["IN_PROGRESS", "CANCELLED"],
-    IN_PROGRESS: [
-      "WAITING_FOR_CLIENT",
-      "WAITING_FOR_THIRD_PARTY",
-      "COMPLETED",
-      "CANCELLED",
-    ],
-    WAITING_FOR_CLIENT: ["IN_PROGRESS", "CANCELLED"],
-    WAITING_FOR_THIRD_PARTY: ["IN_PROGRESS", "CANCELLED"],
-    COMPLETED: ["CLOSED"],
-    CLOSED: [],
-    CANCELLED: [],
-  };
 
   const fetchOrder = useCallback(async () => {
     try {
@@ -51,6 +41,7 @@ export default function AdminWorkOrderDetailPage() {
       if (data.success) {
         setOrder(data.data);
         setStaff(data.staff || []);
+        setSalesReps(data.salesReps || []);
       }
     } finally {
       setLoading(false);
@@ -129,11 +120,11 @@ export default function AdminWorkOrderDetailPage() {
   }
 
   const currentStatus = order.status as string;
-  const nextStatuses = VALID_TRANSITIONS[currentStatus] || [];
+  const nextStatuses = getValidNextStatuses(currentStatus);
   const isOverdue = Boolean(
     order.dueDate &&
     new Date(order.dueDate as string) < new Date() &&
-    !["COMPLETED", "CLOSED", "CANCELLED"].includes(currentStatus),
+    !isTerminal(currentStatus),
   );
 
   return (
@@ -170,7 +161,7 @@ export default function AdminWorkOrderDetailPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <StatusBadge status={currentStatus as WorkOrderStatus} />
+          <StatusBadge status={currentStatus} />
           {isOverdue && (
             <span className="rounded-full bg-red-100 px-2.5 py-1 text-sm font-medium text-red-700">
               {t("admin.workorders.overdue")}
@@ -197,14 +188,11 @@ export default function AdminWorkOrderDetailPage() {
                 className="input-field mb-3"
               >
                 <option value="">{t("admin.detail.selectStatus")}</option>
-                {nextStatuses.map((s) => {
-                  const config = STATUS_CONFIG[s as WorkOrderStatus];
-                  return (
-                    <option key={s} value={s}>
-                      {locale === "zh" ? config?.labelZh : config?.labelEn}
-                    </option>
-                  );
-                })}
+                {nextStatuses.map((s) => (
+                  <option key={s} value={s}>
+                    {getLabel(s, locale)}
+                  </option>
+                ))}
               </select>
               <input
                 type="text"
@@ -307,6 +295,27 @@ export default function AdminWorkOrderDetailPage() {
                   ))}
                 </select>
               </div>
+              <div>
+                <label className="label">
+                  {t("admin.workorderForm.salesRep")}
+                </label>
+                <select
+                  value={(order.salesRepId as string) || ""}
+                  onChange={(e) =>
+                    handleFieldUpdate("salesRepId", e.target.value || null)
+                  }
+                  className="input-field"
+                >
+                  <option value="">
+                    {t("admin.workorderForm.selectSalesRep")}
+                  </option>
+                  {salesReps.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
@@ -399,6 +408,33 @@ export default function AdminWorkOrderDetailPage() {
                 </div>
               )}
             </dl>
+            <button
+              onClick={async () => {
+                const chars =
+                  "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+                let pw = "";
+                for (let i = 0; i < 8; i++)
+                  pw += chars.charAt(Math.floor(Math.random() * chars.length));
+                try {
+                  const res = await fetch(`/api/admin/workorder/${params.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ password: pw }),
+                  });
+                  const data = await res.json();
+                  if (data.success) {
+                    alert(
+                      `${t("admin.detail.passwordResetSuccess")}\n\n${t("admin.detail.newPassword")}: ${pw}`,
+                    );
+                  }
+                } catch {
+                  /* ignore */
+                }
+              }}
+              className="btn-secondary mt-3 w-full text-sm"
+            >
+              {t("admin.detail.resetPassword")}
+            </button>
           </div>
 
           {/* Metadata */}
@@ -448,8 +484,8 @@ export default function AdminWorkOrderDetailPage() {
               entries={
                 (order.statusHistory as Array<{
                   id: string;
-                  oldStatus: WorkOrderStatus | null;
-                  newStatus: WorkOrderStatus;
+                  oldStatus: string | null;
+                  newStatus: string;
                   note: string | null;
                   createdAt: string;
                 }>) || []

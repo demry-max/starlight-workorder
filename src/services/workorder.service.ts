@@ -1,10 +1,6 @@
 import bcrypt from "bcryptjs";
-import { WorkOrderStatus } from "@prisma/client";
 import { workorderRepository } from "@/repositories/workorder.repository";
-import {
-  isValidTransition,
-  STATUS_DEFAULT_PROGRESS,
-} from "@/lib/status-machine";
+import { isValidTransition, getDefaultProgress } from "@/lib/status-machine";
 import { generateWorkOrderNumber } from "@/lib/utils";
 import { notificationService } from "./notification.service";
 
@@ -79,6 +75,7 @@ export const workorderService = {
       priority?: string;
       dueDate?: string;
       assignedStaffId?: string;
+      salesRepId?: string;
       password: string;
     },
     staffId: string,
@@ -98,6 +95,9 @@ export const workorderService = {
       dueDate: data.dueDate ? new Date(data.dueDate) : null,
       assignedStaff: data.assignedStaffId
         ? { connect: { id: data.assignedStaffId } }
+        : undefined,
+      salesRep: data.salesRepId
+        ? { connect: { id: data.salesRepId } }
         : undefined,
       status: "DRAFT",
     });
@@ -125,14 +125,15 @@ export const workorderService = {
 
   async updateStatus(
     workOrderId: string,
-    newStatus: WorkOrderStatus,
+    newStatus: string,
     staffId: string,
     note?: string,
   ) {
     const order = await workorderRepository.findById(workOrderId);
     if (!order) throw new Error("Work order not found");
 
-    if (!isValidTransition(order.status, newStatus)) {
+    const valid = await isValidTransition(order.status, newStatus);
+    if (!valid) {
       throw new Error(
         `Invalid transition from ${order.status} to ${newStatus}`,
       );
@@ -141,7 +142,7 @@ export const workorderService = {
     const updateData: Record<string, unknown> = { status: newStatus };
 
     // Auto-update progress based on status
-    const defaultProgress = STATUS_DEFAULT_PROGRESS[newStatus];
+    const defaultProgress = await getDefaultProgress(newStatus);
     if (defaultProgress >= 0) {
       updateData.progressPercentage = defaultProgress;
     }
@@ -175,6 +176,7 @@ export const workorderService = {
       priority?: string;
       dueDate?: string | null;
       assignedStaffId?: string | null;
+      salesRepId?: string | null;
       description?: string;
       clientName?: string;
       clientCompany?: string | null;
@@ -209,12 +211,21 @@ export const workorderService = {
       }
     }
 
+    if (data.salesRepId !== undefined) {
+      if (data.salesRepId) {
+        updateData.salesRep = { connect: { id: data.salesRepId } };
+      } else {
+        updateData.salesRep = { disconnect: true };
+      }
+    }
+
     return workorderRepository.update(workOrderId, updateData);
   },
 
   async list(filter: {
     search?: string;
-    status?: WorkOrderStatus;
+    status?: string;
+    salesRepId?: string;
     sortBy?: string;
     sortOrder?: "asc" | "desc";
     page: number;

@@ -5,41 +5,39 @@ import Link from "next/link";
 import { useTranslation } from "@/i18n/context";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Pagination } from "@/components/Pagination";
-import type { WorkOrderStatus } from "@/types";
+import { useStatusConfig } from "@/hooks/useStatusConfig";
 
 interface WorkOrderListItem {
   id: string;
   workorderNumber: string;
   clientName: string;
   clientCompany: string | null;
-  status: WorkOrderStatus;
+  status: string;
   priority: string;
   progressPercentage: number;
   dueDate: string | null;
   createdAt: string;
   updatedAt: string;
   assignedStaff: { id: string; name: string } | null;
+  salesRep: { id: string; name: string } | null;
 }
 
-const ALL_STATUSES: WorkOrderStatus[] = [
-  "DRAFT",
-  "RECEIVED",
-  "IN_PROGRESS",
-  "WAITING_FOR_CLIENT",
-  "WAITING_FOR_THIRD_PARTY",
-  "COMPLETED",
-  "CLOSED",
-  "CANCELLED",
-];
+interface SalesRepOption {
+  id: string;
+  name: string;
+}
 
 export default function AdminWorkOrdersPage() {
   const { t, locale } = useTranslation();
+  const { configList, isTerminal, getLabel } = useStatusConfig();
   const [orders, setOrders] = useState<WorkOrderListItem[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [salesRepFilter, setSalesRepFilter] = useState<string>("");
+  const [salesReps, setSalesReps] = useState<SalesRepOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -51,6 +49,7 @@ export default function AdminWorkOrdersPage() {
     });
     if (search) params.set("search", search);
     if (statusFilter) params.set("status", statusFilter);
+    if (salesRepFilter) params.set("salesRepId", salesRepFilter);
 
     try {
       const res = await fetch(`/api/admin/workorders?${params}`);
@@ -63,16 +62,31 @@ export default function AdminWorkOrdersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, statusFilter]);
+  }, [page, search, statusFilter, salesRepFilter]);
 
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
+  useEffect(() => {
+    fetch("/api/admin/sales-reps")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success)
+          setSalesReps(
+            d.data.filter(
+              (r: SalesRepOption & { isActive: boolean }) => r.isActive,
+            ),
+          );
+      });
+  }, []);
+
   const handleExport = () => {
+    if (!confirm(t("admin.workorders.confirmExport"))) return;
     const params = new URLSearchParams({ export: "csv" });
     if (search) params.set("search", search);
     if (statusFilter) params.set("status", statusFilter);
+    if (salesRepFilter) params.set("salesRepId", salesRepFilter);
     window.open(`/api/admin/workorders?${params}`, "_blank");
   };
 
@@ -85,7 +99,7 @@ export default function AdminWorkOrdersPage() {
 
   const isOverdue = (dueDate: string | null, status: string) => {
     if (!dueDate) return false;
-    if (["COMPLETED", "CLOSED", "CANCELLED"].includes(status)) return false;
+    if (isTerminal(status)) return false;
     return new Date(dueDate) < new Date();
   };
 
@@ -130,9 +144,24 @@ export default function AdminWorkOrdersPage() {
             className="input-field sm:w-48"
           >
             <option value="">{t("admin.workorders.allStatuses")}</option>
-            {ALL_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {t(`status.${s}`)}
+            {configList.map((s) => (
+              <option key={s.key} value={s.key}>
+                {getLabel(s.key, locale)}
+              </option>
+            ))}
+          </select>
+          <select
+            value={salesRepFilter}
+            onChange={(e) => {
+              setSalesRepFilter(e.target.value);
+              setPage(1);
+            }}
+            className="input-field sm:w-48"
+          >
+            <option value="">{t("admin.workorders.allSalesReps")}</option>
+            {salesReps.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
               </option>
             ))}
           </select>
@@ -172,6 +201,9 @@ export default function AdminWorkOrdersPage() {
                     </th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">
                       {t("client.workorder.assignedTo")}
+                    </th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500">
+                      {t("admin.workorderForm.salesRep")}
                     </th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">
                       {t("client.workorder.dueDate")}
@@ -218,6 +250,9 @@ export default function AdminWorkOrdersPage() {
                       </td>
                       <td className="px-4 py-3 text-gray-600">
                         {order.assignedStaff?.name || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {order.salesRep?.name || "-"}
                       </td>
                       <td className="px-4 py-3">
                         {order.dueDate ? (
@@ -305,9 +340,13 @@ function CreateWorkOrderModal({
     priority: "MEDIUM",
     dueDate: "",
     assignedStaffId: "",
+    salesRepId: "",
     password: "",
   });
   const [staff, setStaff] = useState<{ id: string; name: string }[]>([]);
+  const [modalSalesReps, setModalSalesReps] = useState<
+    { id: string; name: string }[]
+  >([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [created, setCreated] = useState<{
@@ -320,6 +359,14 @@ function CreateWorkOrderModal({
       .then((r) => r.json())
       .then((d) => {
         if (d.success) setStaff(d.data);
+      });
+    fetch("/api/admin/sales-reps")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success)
+          setModalSalesReps(
+            d.data.filter((r: { isActive: boolean }) => r.isActive),
+          );
       });
   }, []);
 
@@ -338,6 +385,7 @@ function CreateWorkOrderModal({
             ? new Date(form.dueDate).toISOString()
             : undefined,
           assignedStaffId: form.assignedStaffId || undefined,
+          salesRepId: form.salesRepId || undefined,
           clientEmail: form.clientEmail || undefined,
         }),
       });
@@ -496,24 +544,45 @@ function CreateWorkOrderModal({
                   />
                 </div>
               </div>
-              <div>
-                <label className="label">
-                  {t("admin.workorderForm.assignedStaff")}
-                </label>
-                <select
-                  value={form.assignedStaffId}
-                  onChange={(e) => update("assignedStaffId", e.target.value)}
-                  className="input-field"
-                >
-                  <option value="">
-                    {t("admin.workorderForm.selectStaff")}
-                  </option>
-                  {staff.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label">
+                    {t("admin.workorderForm.assignedStaff")}
+                  </label>
+                  <select
+                    value={form.assignedStaffId}
+                    onChange={(e) => update("assignedStaffId", e.target.value)}
+                    className="input-field"
+                  >
+                    <option value="">
+                      {t("admin.workorderForm.selectStaff")}
                     </option>
-                  ))}
-                </select>
+                    {staff.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">
+                    {t("admin.workorderForm.salesRep")}
+                  </label>
+                  <select
+                    value={form.salesRepId}
+                    onChange={(e) => update("salesRepId", e.target.value)}
+                    className="input-field"
+                  >
+                    <option value="">
+                      {t("admin.workorderForm.selectSalesRep")}
+                    </option>
+                    {modalSalesReps.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div>
                 <label className="label">

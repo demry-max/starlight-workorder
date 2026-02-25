@@ -7,17 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum WorkOrderStatus {
-  DRAFT
-  RECEIVED
-  IN_PROGRESS
-  WAITING_FOR_CLIENT
-  WAITING_FOR_THIRD_PARTY
-  COMPLETED
-  CLOSED
-  CANCELLED
-}
-
 enum Priority {
   LOW
   MEDIUM
@@ -36,24 +25,66 @@ enum AuthorType {
   STAFF
 }
 
+model StatusConfig {
+  id              String  @id @default(uuid())
+  key             String  @unique
+  labelEn         String  @map("label_en")
+  labelZh         String  @map("label_zh")
+  color           String  // hex, e.g. "#F59E0B"
+  bgColor         String  @map("bg_color") // hex, e.g. "#FEF3C7"
+  textColor       String  @map("text_color") // hex, e.g. "#92400E"
+  sortOrder       Int     @default(0) @map("sort_order")
+  defaultProgress Int     @default(-1) @map("default_progress") // -1 = don't auto-update
+  isTerminal      Boolean @default(false) @map("is_terminal")
+  isDefault       Boolean @default(false) @map("is_default")
+  isActive        Boolean @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("status_configs")
+}
+
+model StatusTransition {
+  id            String @id @default(uuid())
+  fromStatusKey String @map("from_status_key")
+  toStatusKey   String @map("to_status_key")
+
+  @@unique([fromStatusKey, toStatusKey])
+  @@map("status_transitions")
+}
+
+model SalesRep {
+  id        String   @id @default(uuid())
+  name      String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  workOrders WorkOrder[]
+
+  @@map("sales_reps")
+}
+
 model WorkOrder {
-  id                 String          @id @default(uuid())
-  workorderNumber    String          @unique @map("workorder_number")
-  passwordHash       String          @map("password_hash")
-  clientName         String          @map("client_name")
-  clientCompany      String?         @map("client_company")
-  clientEmail        String?         @map("client_email")
-  clientPhone        String?         @map("client_phone")
-  status             WorkOrderStatus @default(DRAFT)
-  progressPercentage Int             @default(0) @map("progress_percentage")
-  priority           Priority        @default(MEDIUM)
-  assignedStaffId    String?         @map("assigned_staff_id")
-  assignedStaff      StaffUser?      @relation(fields: [assignedStaffId], references: [id])
+  id                 String   @id @default(uuid())
+  workorderNumber    String   @unique @map("workorder_number")
+  passwordHash       String   @map("password_hash")
+  clientName         String   @map("client_name")
+  clientCompany      String?  @map("client_company")
+  clientEmail        String?  @map("client_email")
+  clientPhone        String?  @map("client_phone")
+  status             String   @default("DRAFT")
+  progressPercentage Int      @default(0) @map("progress_percentage")
+  priority           Priority @default(MEDIUM)
+  assignedStaffId    String?  @map("assigned_staff_id")
+  assignedStaff      StaffUser? @relation(fields: [assignedStaffId], references: [id])
+  salesRepId         String?  @map("sales_rep_id")
+  salesRep           SalesRep? @relation(fields: [salesRepId], references: [id])
   description        String?
-  dueDate            DateTime?       @map("due_date")
-  isLocked           Boolean         @default(false) @map("is_locked")
-  lockedUntil        DateTime?       @map("locked_until")
-  failedAttempts     Int             @default(0) @map("failed_attempts")
+  dueDate            DateTime? @map("due_date")
+  isLocked           Boolean  @default(false) @map("is_locked")
+  lockedUntil        DateTime? @map("locked_until")
+  failedAttempts     Int      @default(0) @map("failed_attempts")
 
   // Feishu integration fields
   feishuRecordId String?   @map("feishu_record_id")
@@ -69,18 +100,19 @@ model WorkOrder {
   @@index([status])
   @@index([dueDate])
   @@index([assignedStaffId])
+  @@index([salesRepId])
   @@map("work_orders")
 }
 
 model WorkOrderStatusHistory {
-  id          String           @id @default(uuid())
-  workOrderId String           @map("work_order_id")
-  workOrder   WorkOrder        @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
-  oldStatus   WorkOrderStatus? @map("old_status")
-  newStatus   WorkOrderStatus  @map("new_status")
-  changedBy   String?          @map("changed_by")
+  id          String   @id @default(uuid())
+  workOrderId String   @map("work_order_id")
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  oldStatus   String?  @map("old_status")
+  newStatus   String   @map("new_status")
+  changedBy   String?  @map("changed_by")
   note        String?
-  createdAt   DateTime         @default(now()) @map("created_at")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   @@index([workOrderId])
   @@map("work_order_status_history")
@@ -114,4 +146,33 @@ model StaffUser {
   workOrders WorkOrder[]
 
   @@map("staff_users")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  action     String   // e.g. "workorder.create", "auth.login"
+  actor      String?  // staffId or "client:<workOrderId>" or "system"
+  actorEmail String?  @map("actor_email")
+  targetType String?  @map("target_type") // "workorder", "user", "status", etc.
+  targetId   String?  @map("target_id")
+  detail     String?  // JSON string with extra context
+  ipAddress  String?  @map("ip_address")
+  success    Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([action])
+  @@index([actor])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
 }

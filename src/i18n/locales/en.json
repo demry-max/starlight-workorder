@@ -91,8 +91,12 @@
     "nav": {
       "dashboard": "Dashboard",
       "workorders": "Work Orders",
+      "statuses": "Statuses",
       "users": "Users",
-      "syncFeishu": "Sync Feishu"
+      "syncFeishu": "Sync Feishu",
+      "logs": "Audit Logs",
+      "guide": "How to Use",
+      "settings": "Settings"
     },
     "dashboard": {
       "title": "Dashboard",
@@ -109,9 +113,11 @@
       "createNew": "Create Work Order",
       "searchPlaceholder": "Search by order number or client name...",
       "allStatuses": "All Statuses",
+      "allSalesReps": "All Sales Reps",
       "noOrders": "No work orders found.",
       "overdue": "Overdue",
-      "confirmDelete": "Are you sure you want to delete this work order? This action cannot be undone."
+      "confirmDelete": "Are you sure you want to delete this work order? This action cannot be undone.",
+      "confirmExport": "Export the current work order list as CSV?"
     },
     "workorderForm": {
       "createTitle": "Create Work Order",
@@ -125,6 +131,8 @@
       "dueDate": "Due Date",
       "assignedStaff": "Assigned Staff",
       "selectStaff": "Select staff member",
+      "salesRep": "Sales Rep",
+      "selectSalesRep": "Select sales rep",
       "status": "Status",
       "progress": "Progress (%)",
       "password": "Client Password",
@@ -146,7 +154,10 @@
       "sendReply": "Send Reply",
       "internalLabel": "INTERNAL",
       "staffLabel": "Staff",
-      "clientLabel": "Client"
+      "clientLabel": "Client",
+      "resetPassword": "Reset Password",
+      "newPassword": "New Password",
+      "passwordResetSuccess": "Password has been reset successfully."
     },
     "users": {
       "title": "User Management",
@@ -167,6 +178,60 @@
       "confirmDelete": "Are you sure you want to delete user {name}?",
       "emailExists": "A user with this email already exists."
     },
+    "statuses": {
+      "title": "Status Management",
+      "create": "Create Status",
+      "createTitle": "Create New Status",
+      "editTitle": "Edit Status",
+      "confirmDelete": "Are you sure you want to delete this status?",
+      "editTransitions": "Edit Transitions",
+      "transitionsHint": "Check the boxes to allow a transition from the row status to the column status.",
+      "key": "Key",
+      "keyHint": "Uppercase with underscores, e.g. PENDING_REVIEW",
+      "preview": "Preview",
+      "labelEn": "English Label",
+      "labelZh": "Chinese Label",
+      "flags": "Flags",
+      "order": "Order",
+      "dotColor": "Dot Color",
+      "bgColorLabel": "Background",
+      "textColorLabel": "Text Color",
+      "sortOrder": "Sort Order",
+      "defaultProgress": "Default Progress",
+      "progressHint": "-1 = don't auto-update progress",
+      "isTerminal": "Terminal status",
+      "isDefaultLabel": "Default for new orders",
+      "default": "Default",
+      "terminal": "Terminal",
+      "inactive": "Inactive",
+      "setDefault": "Set Default",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "from": "From",
+      "to": "To"
+    },
+    "logs": {
+      "title": "Audit Logs",
+      "actionFilter": "Action",
+      "actorFilter": "Actor",
+      "actorPlaceholder": "Search by email or ID...",
+      "statusFilter": "Result",
+      "allResults": "All Results",
+      "successOnly": "Success Only",
+      "failedOnly": "Failed Only",
+      "dateFrom": "From Date",
+      "dateTo": "To Date",
+      "time": "Time",
+      "action": "Action",
+      "actor": "Actor",
+      "target": "Target",
+      "result": "Result",
+      "detail": "Detail",
+      "success": "Success",
+      "failed": "Failed",
+      "show": "Show",
+      "hide": "Hide"
+    },
     "feishu": {
       "syncTitle": "Feishu Sync",
       "syncButton": "Sync Now",
@@ -175,6 +240,35 @@
       "syncing": "Syncing...",
       "syncSuccess": "Sync completed successfully.",
       "syncError": "Sync failed. Please check the configuration."
+    },
+    "salesReps": {
+      "title": "Sales Reps",
+      "createNew": "Add Sales Rep",
+      "name": "Name",
+      "confirmDelete": "Are you sure you want to delete this sales rep?",
+      "noData": "No sales reps found.",
+      "editTitle": "Edit Sales Rep"
+    },
+    "settings": {
+      "title": "Settings",
+      "tabs": {
+        "smtp": "SMTP",
+        "statuses": "Statuses",
+        "users": "Users",
+        "salesReps": "Sales Reps"
+      },
+      "smtpTitle": "SMTP Email Configuration",
+      "smtpDescription": "Configure the email server for sending notifications to clients. Settings here override environment variables.",
+      "smtpHost": "SMTP Host",
+      "smtpPort": "SMTP Port",
+      "smtpUser": "SMTP Username",
+      "smtpPass": "SMTP Password",
+      "smtpFrom": "From Address",
+      "saveSuccess": "Settings saved successfully.",
+      "testEmailTitle": "Send Test Email",
+      "testEmailPlaceholder": "Enter email address...",
+      "sendTestEmail": "Send Test Email",
+      "testSuccess": "Test email sent successfully."
     }
   },
   "errors": {

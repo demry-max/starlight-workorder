@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/prisma";
-import { WorkOrderStatus, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { getTerminalStatusKeys } from "@/lib/status-machine";
 
 export interface WorkOrderFilter {
   search?: string;
-  status?: WorkOrderStatus;
+  status?: string;
+  salesRepId?: string;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   page: number;
@@ -12,6 +14,7 @@ export interface WorkOrderFilter {
 
 const workorderInclude = {
   assignedStaff: { select: { id: true, name: true, email: true } },
+  salesRep: { select: { id: true, name: true } },
   statusHistory: { orderBy: { createdAt: "asc" as const } },
   comments: { orderBy: { createdAt: "asc" as const } },
 };
@@ -46,6 +49,10 @@ export const workorderRepository = {
       where.status = filter.status;
     }
 
+    if (filter.salesRepId) {
+      where.salesRepId = filter.salesRepId;
+    }
+
     const orderByField = filter.sortBy || "created_at";
     const fieldMap: Record<string, string> = {
       created_at: "createdAt",
@@ -63,6 +70,7 @@ export const workorderRepository = {
         where,
         include: {
           assignedStaff: { select: { id: true, name: true, email: true } },
+          salesRep: { select: { id: true, name: true } },
         },
         orderBy,
         skip: (filter.page - 1) * filter.pageSize,
@@ -95,8 +103,8 @@ export const workorderRepository = {
 
   async addStatusHistory(data: {
     workOrderId: string;
-    oldStatus: WorkOrderStatus | null;
-    newStatus: WorkOrderStatus;
+    oldStatus: string | null;
+    newStatus: string;
     changedBy: string | null;
     note?: string;
   }) {
@@ -147,16 +155,18 @@ export const workorderRepository = {
   },
 
   async countOpen() {
+    const terminalKeys = await getTerminalStatusKeys();
     return prisma.workOrder.count({
-      where: { status: { notIn: ["COMPLETED", "CLOSED", "CANCELLED"] } },
+      where: { status: { notIn: terminalKeys } },
     });
   },
 
   async countOverdue() {
+    const terminalKeys = await getTerminalStatusKeys();
     return prisma.workOrder.count({
       where: {
         dueDate: { lt: new Date() },
-        status: { notIn: ["COMPLETED", "CLOSED", "CANCELLED"] },
+        status: { notIn: terminalKeys },
       },
     });
   },
@@ -174,10 +184,11 @@ export const workorderRepository = {
   },
 
   async staffWorkload() {
+    const terminalKeys = await getTerminalStatusKeys();
     const results = await prisma.workOrder.groupBy({
       by: ["assignedStaffId"],
       where: {
-        status: { notIn: ["COMPLETED", "CLOSED", "CANCELLED"] },
+        status: { notIn: terminalKeys },
         assignedStaffId: { not: null },
       },
       _count: true,
@@ -201,7 +212,8 @@ export const workorderRepository = {
 
   async findAllForExport(filter: {
     search?: string;
-    status?: WorkOrderStatus;
+    status?: string;
+    salesRepId?: string;
   }) {
     const where: Prisma.WorkOrderWhereInput = {};
     if (filter.search) {
@@ -213,10 +225,16 @@ export const workorderRepository = {
     if (filter.status) {
       where.status = filter.status;
     }
+    if (filter.salesRepId) {
+      where.salesRepId = filter.salesRepId;
+    }
 
     return prisma.workOrder.findMany({
       where,
-      include: { assignedStaff: { select: { name: true } } },
+      include: {
+        assignedStaff: { select: { name: true } },
+        salesRep: { select: { name: true } },
+      },
       orderBy: { createdAt: "desc" },
     });
   },

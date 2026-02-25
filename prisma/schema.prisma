@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WorkOrderStatus {
+  DRAFT
+  RECEIVED
+  IN_PROGRESS
+  WAITING_FOR_CLIENT
+  WAITING_FOR_THIRD_PARTY
+  COMPLETED
+  CLOSED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum StaffRole {
+  ADMIN
+  MANAGER
+  STAFF
+}
+
+enum AuthorType {
+  CLIENT
+  STAFF
+}
+
+model WorkOrder {
+  id                 String          @id @default(uuid())
+  workorderNumber    String          @unique @map("workorder_number")
+  passwordHash       String          @map("password_hash")
+  clientName         String          @map("client_name")
+  clientCompany      String?         @map("client_company")
+  clientEmail        String?         @map("client_email")
+  clientPhone        String?         @map("client_phone")
+  status             WorkOrderStatus @default(DRAFT)
+  progressPercentage Int             @default(0) @map("progress_percentage")
+  priority           Priority        @default(MEDIUM)
+  assignedStaffId    String?         @map("assigned_staff_id")
+  assignedStaff      StaffUser?      @relation(fields: [assignedStaffId], references: [id])
+  description        String?
+  dueDate            DateTime?       @map("due_date")
+  isLocked           Boolean         @default(false) @map("is_locked")
+  lockedUntil        DateTime?       @map("locked_until")
+  failedAttempts     Int             @default(0) @map("failed_attempts")
+
+  // Feishu integration fields
+  feishuRecordId String?   @map("feishu_record_id")
+  lastSyncedAt   DateTime? @map("last_synced_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  statusHistory WorkOrderStatusHistory[]
+  comments      Comment[]
+
+  @@index([workorderNumber])
+  @@index([status])
+  @@index([dueDate])
+  @@index([assignedStaffId])
+  @@map("work_orders")
+}
+
+model WorkOrderStatusHistory {
+  id          String           @id @default(uuid())
+  workOrderId String           @map("work_order_id")
+  workOrder   WorkOrder        @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  oldStatus   WorkOrderStatus? @map("old_status")
+  newStatus   WorkOrderStatus  @map("new_status")
+  changedBy   String?          @map("changed_by")
+  note        String?
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  @@index([workOrderId])
+  @@map("work_order_status_history")
+}
+
+model Comment {
+  id          String     @id @default(uuid())
+  workOrderId String     @map("work_order_id")
+  workOrder   WorkOrder  @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  authorType  AuthorType @map("author_type")
+  authorId    String?    @map("author_id")
+  authorName  String?    @map("author_name")
+  content     String
+  isInternal  Boolean    @default(false) @map("is_internal")
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  @@index([workOrderId])
+  @@map("comments")
+}
+
+model StaffUser {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         StaffRole @default(STAFF)
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  workOrders WorkOrder[]
+
+  @@map("staff_users")
+}

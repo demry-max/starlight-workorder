@@ -1,0 +1,175 @@
+{
+  "common": {
+    "appName": "Starlight WorkOrder Portal",
+    "companyName": "Starlight Business Consulting",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export CSV",
+    "submit": "Submit",
+    "back": "Back",
+    "close": "Close",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "noData": "No data available",
+    "actions": "Actions",
+    "language": "Language",
+    "english": "English",
+    "chinese": "中文",
+    "logout": "Logout",
+    "copyright": "© 2026 Starlight Business Consulting. All rights reserved."
+  },
+  "status": {
+    "DRAFT": "Draft",
+    "RECEIVED": "Received",
+    "IN_PROGRESS": "In Progress",
+    "WAITING_FOR_CLIENT": "Waiting for Client",
+    "WAITING_FOR_THIRD_PARTY": "Waiting for Third Party",
+    "COMPLETED": "Completed",
+    "CLOSED": "Closed",
+    "CANCELLED": "Cancelled"
+  },
+  "priority": {
+    "LOW": "Low",
+    "MEDIUM": "Medium",
+    "HIGH": "High",
+    "URGENT": "Urgent"
+  },
+  "client": {
+    "login": {
+      "title": "Check Your Work Order",
+      "subtitle": "Enter your work order number and password to view your order status.",
+      "workorderNumber": "Work Order Number",
+      "workorderNumberPlaceholder": "e.g., WO-A1B2C3D4E5",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submit": "View Work Order",
+      "error": "Invalid work order number or password.",
+      "locked": "This work order has been temporarily locked due to multiple failed login attempts. Please try again later.",
+      "fieldRequired": "This field is required."
+    },
+    "workorder": {
+      "title": "Work Order Details",
+      "orderNumber": "Order Number",
+      "status": "Status",
+      "progress": "Progress",
+      "priority": "Priority",
+      "client": "Client",
+      "company": "Company",
+      "assignedTo": "Assigned To",
+      "description": "Description",
+      "dueDate": "Due Date",
+      "createdAt": "Created",
+      "updatedAt": "Last Updated",
+      "timeline": "Status Timeline",
+      "comments": "Comments",
+      "addComment": "Add a Comment",
+      "commentPlaceholder": "Type your message here...",
+      "submitComment": "Send Comment",
+      "noComments": "No comments yet.",
+      "overdue": "Overdue",
+      "notSet": "Not set"
+    }
+  },
+  "admin": {
+    "login": {
+      "title": "Staff Login",
+      "subtitle": "Sign in to manage work orders.",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submit": "Sign In",
+      "error": "Invalid email or password."
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "workorders": "Work Orders",
+      "syncFeishu": "Sync Feishu"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "totalOpen": "Total Open",
+      "overdue": "Overdue",
+      "waitingForClient": "Waiting for Client",
+      "completedThisWeek": "Completed This Week",
+      "ordersByStatus": "Orders by Status",
+      "staffWorkload": "Staff Workload",
+      "orders": "orders"
+    },
+    "workorders": {
+      "title": "Work Orders",
+      "createNew": "Create Work Order",
+      "searchPlaceholder": "Search by order number or client name...",
+      "allStatuses": "All Statuses",
+      "noOrders": "No work orders found.",
+      "overdue": "Overdue"
+    },
+    "workorderForm": {
+      "createTitle": "Create Work Order",
+      "editTitle": "Edit Work Order",
+      "clientName": "Client Name",
+      "clientCompany": "Client Company",
+      "clientEmail": "Client Email",
+      "clientPhone": "Client Phone",
+      "description": "Description",
+      "priority": "Priority",
+      "dueDate": "Due Date",
+      "assignedStaff": "Assigned Staff",
+      "selectStaff": "Select staff member",
+      "status": "Status",
+      "progress": "Progress (%)",
+      "password": "Client Password",
+      "passwordHint": "Password for the client to access this work order.",
+      "generatedNumber": "Generated Order Number",
+      "internalNote": "Internal Note",
+      "internalNotePlaceholder": "Add an internal note (not visible to client)...",
+      "addInternalNote": "Add Internal Note"
+    },
+    "detail": {
+      "updateStatus": "Update Status",
+      "statusNote": "Status Change Note",
+      "comments": "Comments & Notes",
+      "internalNotes": "Internal Notes",
+      "clientComments": "Client Comments",
+      "replyPlaceholder": "Reply to client...",
+      "sendReply": "Send Reply",
+      "internalLabel": "INTERNAL",
+      "staffLabel": "Staff",
+      "clientLabel": "Client"
+    },
+    "feishu": {
+      "syncTitle": "Feishu Sync",
+      "syncButton": "Sync Now",
+      "lastSync": "Last synced",
+      "notConfigured": "Feishu integration is not configured. Please set environment variables.",
+      "syncing": "Syncing...",
+      "syncSuccess": "Sync completed successfully.",
+      "syncError": "Sync failed. Please check the configuration."
+    }
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "unauthorized": "You are not authorized to perform this action.",
+    "notFound": "The requested resource was not found.",
+    "validation": "Please check your input and try again.",
+    "rateLimited": "Too many attempts. Please try again later.",
+    "invalidTransition": "This status transition is not allowed.",
+    "serverError": "Internal server error."
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page",
+    "of": "of",
+    "showing": "Showing",
+    "to": "to",
+    "results": "results"
+  }
+}

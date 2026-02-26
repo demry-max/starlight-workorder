@@ -65,8 +65,8 @@
       "client": "Client",
       "company": "Company",
       "assignedTo": "Assigned To",
-      "description": "Description",
-      "dueDate": "Due Date",
+      "description": "Service Description",
+      "dueDate": "Expected Completion Time",
       "createdAt": "Created",
       "updatedAt": "Last Updated",
       "timeline": "Status Timeline",
@@ -76,7 +76,26 @@
       "submitComment": "Send Comment",
       "noComments": "No comments yet.",
       "overdue": "Overdue",
-      "notSet": "Not set"
+      "notSet": "Not set",
+      "rating": "Rate Our Service",
+      "ratingTitle": "Service Rating",
+      "ratingSubtitle": "How was your experience?",
+      "ratingComment": "Your feedback",
+      "ratingCommentPlaceholder": "Tell us more about your experience...",
+      "submitRating": "Submit Rating",
+      "ratingSuccess": "Thank you for your feedback!",
+      "ratingAlreadySubmitted": "You have already submitted a rating.",
+      "quickComments": {
+        "excellent": "Excellent service, very satisfied!",
+        "professional": "Professional and efficient team.",
+        "goodCommunication": "Great communication throughout the process.",
+        "slow": "Response time could be improved.",
+        "unclearProcess": "The process was unclear at times.",
+        "needsImprovement": "Service quality needs improvement."
+      },
+      "serviceInfo": "Service Information",
+      "orderInfo": "Order Information",
+      "contactInfo": "Contact & Staff"
     }
   },
   "admin": {
@@ -96,6 +115,7 @@
       "statuses": "Statuses",
       "users": "Users",
       "syncFeishu": "Sync Feishu",
+      "ratings": "Ratings",
       "logs": "Audit Logs",
       "guide": "How to Use",
       "settings": "Settings"
@@ -162,7 +182,10 @@
       "passwordResetSuccess": "Password has been reset successfully.",
       "unsavedChanges": "Unsaved changes",
       "discard": "Discard",
-      "saveSuccess": "Changes saved."
+      "saveSuccess": "Changes saved.",
+      "clientRating": "Client Rating",
+      "noRating": "No rating submitted",
+      "ratingStars": "stars"
     },
     "users": {
       "title": "User Management",
@@ -189,6 +212,7 @@
       "tab": {
         "dashboard": "Dashboard",
         "workorders": "Work Orders",
+        "ratings": "Ratings",
         "logs": "Audit Logs",
         "guide": "Guide",
         "settings": "Settings",

@@ -95,6 +95,7 @@ model WorkOrder {
 
   statusHistory WorkOrderStatusHistory[]
   comments      Comment[]
+  rating        Rating?
 
   @@index([workorderNumber])
   @@index([status])
@@ -175,4 +176,15 @@ model SystemSetting {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("system_settings")
+}
+
+model Rating {
+  id          String    @id @default(uuid())
+  workOrderId String    @unique @map("work_order_id")
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  score       Int       // 1-5 stars
+  comment     String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@map("ratings")
 }

@@ -246,66 +246,52 @@ export default function AdminWorkOrderDetailPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Column - Details & Edit */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Status Update */}
+          {/* Status Update - Inline compact bar */}
           {nextStatuses.length > 0 && (
             <div className="card">
               <h3 className="text-sm font-medium text-gray-500 mb-3">
                 {t("admin.detail.updateStatus")}
               </h3>
-              <select
-                value={selectedStatus || ""}
-                onChange={(e) => setSelectedStatus(e.target.value || null)}
-                className="input-field mb-3"
-              >
-                <option value="">{t("admin.detail.selectStatus")}</option>
-                {nextStatuses.map((s) => (
-                  <option key={s} value={s}>
-                    {getLabel(s, locale)}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                value={statusNote}
-                onChange={(e) => setStatusNote(e.target.value)}
-                placeholder={t("admin.detail.statusNote")}
-                className="input-field"
-              />
-              {selectedStatus && (
-                <button
-                  onClick={() => handleStatusUpdate(selectedStatus)}
-                  disabled={updating}
-                  className="btn-primary mt-3 w-full"
-                >
-                  {updating ? t("common.loading") : t("common.save")}
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Unsaved changes bar */}
-          {isDirty && (
-            <div className="sticky top-16 z-10 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 shadow-sm">
-              <span className="text-sm font-medium text-amber-800">
-                {t("admin.detail.unsavedChanges")}
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleDiscard}
-                  className="btn-secondary text-sm"
-                >
-                  {t("admin.detail.discard")}
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="btn-primary text-sm"
-                >
-                  {saving ? t("common.loading") : t("common.save")}
-                </button>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="flex-1">
+                  <select
+                    value={selectedStatus || ""}
+                    onChange={(e) => setSelectedStatus(e.target.value || null)}
+                    className="input-field"
+                  >
+                    <option value="">{t("admin.detail.selectStatus")}</option>
+                    {nextStatuses.map((s) => (
+                      <option key={s} value={s}>
+                        {getLabel(s, locale)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={statusNote}
+                    onChange={(e) => setStatusNote(e.target.value)}
+                    placeholder={t("admin.detail.statusNote")}
+                    className="input-field"
+                  />
+                </div>
+                {selectedStatus && (
+                  <button
+                    onClick={() => handleStatusUpdate(selectedStatus)}
+                    disabled={updating}
+                    className="btn-secondary text-sm whitespace-nowrap"
+                  >
+                    {updating
+                      ? t("common.loading")
+                      : t("admin.detail.updateStatus")}
+                  </button>
+                )}
               </div>
             </div>
           )}
+
+          {/* Save bar - only shows when form fields are changed */}
           {saveMsg && (
             <div className="rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
               {saveMsg}
@@ -441,6 +427,22 @@ export default function AdminWorkOrderDetailPage() {
               placeholder={t("admin.workorderForm.description")}
             />
           </div>
+
+          {/* Single Save Button - only when fields changed */}
+          {isDirty && (
+            <div className="flex items-center justify-end gap-3">
+              <button onClick={handleDiscard} className="btn-secondary text-sm">
+                {t("admin.detail.discard")}
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="btn-primary text-sm"
+              >
+                {saving ? t("common.loading") : t("common.save")}
+              </button>
+            </div>
+          )}
 
           {/* Comments */}
           <div className="card">
@@ -592,6 +594,46 @@ export default function AdminWorkOrderDetailPage() {
                 </div>
               )}
             </dl>
+          </div>
+
+          {/* Client Rating */}
+          <div className="card">
+            <h3 className="text-sm font-medium text-gray-500 mb-3">
+              {t("admin.detail.clientRating")}
+            </h3>
+            {order.rating ? (
+              <div>
+                <div className="flex items-center gap-1 mb-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <svg
+                      key={star}
+                      className={`h-5 w-5 ${star <= (order.rating as { score: number }).score ? "text-amber-400" : "text-gray-200"}`}
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                  ))}
+                  <span className="ml-1 text-sm text-gray-500">
+                    {(order.rating as { score: number }).score}/5
+                  </span>
+                </div>
+                {(order.rating as { comment: string | null }).comment && (
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap bg-gray-50 rounded-lg p-3">
+                    {(order.rating as { comment: string | null }).comment}
+                  </p>
+                )}
+                <p className="text-xs text-gray-400 mt-2">
+                  {new Date(
+                    (order.rating as { createdAt: string }).createdAt,
+                  ).toLocaleString(locale === "zh" ? "zh-CN" : "en-US")}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400">
+                {t("admin.detail.noRating")}
+              </p>
+            )}
           </div>
 
           {/* Timeline */}

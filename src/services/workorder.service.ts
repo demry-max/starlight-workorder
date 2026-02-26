@@ -1,6 +1,10 @@
 import bcrypt from "bcryptjs";
 import { workorderRepository } from "@/repositories/workorder.repository";
-import { isValidTransition, getDefaultProgress } from "@/lib/status-machine";
+import {
+  isValidTransition,
+  getDefaultProgress,
+  isTerminalStatus,
+} from "@/lib/status-machine";
 import { generateWorkOrderNumber } from "@/lib/utils";
 import { notificationService } from "./notification.service";
 
@@ -39,6 +43,13 @@ export const workorderService = {
           content: c.content,
           createdAt: c.createdAt.toISOString(),
         })),
+      rating: order.rating
+        ? {
+            score: order.rating.score,
+            comment: order.rating.comment,
+            createdAt: order.rating.createdAt.toISOString(),
+          }
+        : null,
     };
   },
 
@@ -165,6 +176,17 @@ export const workorderService = {
       newStatus,
       clientEmail: order.clientEmail,
     });
+
+    // Send rating email when work order reaches a completed terminal status
+    const isNowTerminal = await isTerminalStatus(newStatus);
+    if (isNowTerminal && order.clientEmail && newStatus === "COMPLETED") {
+      notificationService.onWorkOrderCompleted({
+        workOrderId,
+        workorderNumber: order.workorderNumber,
+        clientName: order.clientName,
+        clientEmail: order.clientEmail,
+      });
+    }
 
     return updated;
   },

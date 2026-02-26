@@ -139,9 +139,147 @@ export default function AdminGuidePage() {
           <div className="text-sm text-gray-600 space-y-2">
             <p>
               {isZh
-                ? '在工单详情页编辑字段（进度、优先级、截止日期、负责人、销售代表、描述）时，更改不会自动保存。修改后会出现"未保存更改"提示栏，点击"保存"按钮提交所有更改，或点击"放弃更改"恢复原始值。状态更新仍然是即时生效的。'
-                : 'When editing fields on the work order detail page (progress, priority, due date, staff, sales rep, description), changes are not auto-saved. A "Unsaved changes" bar appears with Save and Discard buttons. Click Save to submit all changes at once, or Discard to revert. Status updates remain immediate.'}
+                ? '在工单详情页编辑字段（进度、优先级、预计完成时间、负责人、销售代表、服务内容）时，更改不会自动保存。修改后会出现"未保存更改"提示栏，点击"保存"按钮提交所有更改，或点击"放弃更改"恢复原始值。状态更新仍然是即时生效的。'
+                : 'When editing fields on the work order detail page (progress, priority, expected completion time, staff, sales rep, service description), changes are not auto-saved. A "Unsaved changes" bar appears with Save and Discard buttons. Click Save to submit all changes at once, or Discard to revert. Status updates remain immediate.'}
             </p>
+          </div>
+        </section>
+
+        {/* Email Notifications */}
+        <section className="card">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            {isZh ? "9. 邮件通知" : "9. Email Notifications"}
+          </h2>
+          <div className="text-sm text-gray-600 space-y-2">
+            <p>
+              {isZh
+                ? "系统会在以下场景自动发送邮件通知给客户（前提是已配置SMTP且工单填写了客户邮箱）："
+                : "The system automatically sends email notifications to clients in the following scenarios (requires SMTP configuration and client email on the work order):"}
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>
+                {isZh
+                  ? "工单创建：客户收到工单号和密码"
+                  : "Work order created: Client receives order number and password"}
+              </li>
+              <li>
+                {isZh
+                  ? "状态更新：客户收到新状态通知"
+                  : "Status updated: Client receives new status notification"}
+              </li>
+              <li>
+                {isZh
+                  ? "员工回复评论：客户收到新回复通知"
+                  : "Staff reply: Client receives new comment notification"}
+              </li>
+              <li>
+                {isZh
+                  ? "工单完成：客户收到服务评价邀请邮件"
+                  : "Work order completed: Client receives a rating invitation email"}
+              </li>
+            </ul>
+            <p>
+              {isZh
+                ? '请在"设置 > SMTP"中配置邮件服务器。所有邮件链接指向客户登录页面，客户可通过工单号和密码登录查看详情。'
+                : 'Configure the email server under "Settings > SMTP". All email links point to the client login page where clients can log in with their order number and password.'}
+            </p>
+          </div>
+        </section>
+
+        {/* Client Rating System */}
+        <section className="card">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            {isZh ? "10. 客户评价系统" : "10. Client Rating System"}
+          </h2>
+          <div className="text-sm text-gray-600 space-y-2">
+            <p>
+              {isZh
+                ? '当工单状态变为"已完成"时，系统会自动向客户发送评价邮件。客户可以通过邮件中的链接或在工单详情页提交1-5星的评价和反馈。'
+                : 'When a work order status changes to "Completed", the system automatically sends a rating email to the client. Clients can submit a 1-5 star rating with feedback via the email link or from the work order page.'}
+            </p>
+            <p>
+              {isZh
+                ? "评价页面提供6个快捷评语按钮（3个好评、3个差评），客户可以点击快速填入，也可以手动输入评语。每个工单只能评价一次。"
+                : "The rating page provides 6 quick-fill comment buttons (3 positive, 3 negative). Clients can click to auto-fill or type their own feedback. Each work order can only be rated once."}
+            </p>
+            <p>
+              {isZh
+                ? '管理员可以在工单详情页右侧的"客户评价"卡片中查看评分和评语。'
+                : 'Admins can view the rating score and comments in the "Client Rating" card on the right side of the work order detail page.'}
+            </p>
+          </div>
+        </section>
+
+        {/* Client Work Order Page */}
+        <section className="card">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            {isZh ? "11. 客户工单页面" : "11. Client Work Order Page"}
+          </h2>
+          <div className="text-sm text-gray-600 space-y-2">
+            <p>
+              {isZh
+                ? "客户登录后可以查看工单详情，包括：工单号和当前状态、进度条、状态时间线（黄色高亮显示）、服务内容、预计完成时间、负责人信息。客户可以在评论区与员工沟通。"
+                : "After logging in, clients can view work order details including: order number and current status, progress bar, status timeline (highlighted in yellow), service description, expected completion time, and assigned staff. Clients can communicate with staff via the comments section."}
+            </p>
+            <p>
+              {isZh
+                ? "工单完成后，页面会显示评价入口，客户可以直接提交对服务的评价。如果已评价，则显示已提交的评分和评语。"
+                : "After completion, a rating prompt appears on the page. Clients can submit their service rating directly. If already rated, the submitted score and comment are displayed."}
+            </p>
+          </div>
+        </section>
+
+        {/* Field Name Reference */}
+        <section className="card">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            {isZh ? "12. 字段名称参考" : "12. Field Name Reference"}
+          </h2>
+          <div className="text-sm text-gray-600">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="py-2 pr-4 font-medium text-gray-700">
+                      {isZh ? "字段" : "Field"}
+                    </th>
+                    <th className="py-2 pr-4 font-medium text-gray-700">
+                      English
+                    </th>
+                    <th className="py-2 font-medium text-gray-700">中文</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  <tr>
+                    <td className="py-2 pr-4 text-gray-500">
+                      {isZh ? "预计完成时间" : "Due date"}
+                    </td>
+                    <td className="py-2 pr-4">Expected Completion Time</td>
+                    <td className="py-2">预计完成时间</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-4 text-gray-500">
+                      {isZh ? "服务内容" : "Description"}
+                    </td>
+                    <td className="py-2 pr-4">Service Description</td>
+                    <td className="py-2">服务内容</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-4 text-gray-500">
+                      {isZh ? "状态时间线" : "Timeline"}
+                    </td>
+                    <td className="py-2 pr-4">Status Timeline</td>
+                    <td className="py-2">状态时间线</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-4 text-gray-500">
+                      {isZh ? "客户评价" : "Rating"}
+                    </td>
+                    <td className="py-2 pr-4">Client Rating (1-5 stars)</td>
+                    <td className="py-2">客户评价（1-5星）</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
       </div>

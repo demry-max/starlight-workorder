@@ -6,6 +6,7 @@ export type RolePermissions = Record<string, string[]>;
 export const ALL_TAB_IDS = [
   "dashboard",
   "workorders",
+  "ratings",
   "logs",
   "guide",
   "settings",
@@ -22,6 +23,7 @@ export const DEFAULT_PERMISSIONS: RolePermissions = {
   MANAGER: [
     "dashboard",
     "workorders",
+    "ratings",
     "logs",
     "guide",
     "settings",
@@ -29,7 +31,7 @@ export const DEFAULT_PERMISSIONS: RolePermissions = {
     "settings.statuses",
     "settings.salesReps",
   ],
-  STAFF: ["dashboard", "workorders"],
+  STAFF: ["dashboard", "workorders", "ratings"],
 };
 
 const SETTING_KEY = "role_permissions";
@@ -40,7 +42,20 @@ export async function getPermissions(): Promise<RolePermissions> {
       where: { key: SETTING_KEY },
     });
     if (setting) {
-      return JSON.parse(setting.value) as RolePermissions;
+      const stored = JSON.parse(setting.value) as RolePermissions;
+      // Merge any newly added tab IDs into stored permissions
+      // so that new tabs automatically appear for roles that should have them
+      const allIds = ALL_TAB_IDS as readonly string[];
+      for (const [role, defaultPerms] of Object.entries(DEFAULT_PERMISSIONS)) {
+        const storedPerms = stored[role] || [];
+        const newTabs = defaultPerms.filter(
+          (tab) => allIds.includes(tab) && !storedPerms.includes(tab),
+        );
+        if (newTabs.length > 0) {
+          stored[role] = [...storedPerms, ...newTabs];
+        }
+      }
+      return stored;
     }
   } catch {
     // fall through to defaults

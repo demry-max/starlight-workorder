@@ -115,6 +115,7 @@
       "statuses": "Statuses",
       "users": "Users",
       "syncFeishu": "Sync Feishu",
+      "ratings": "Ratings",
       "logs": "Audit Logs",
       "guide": "How to Use",
       "settings": "Settings"
@@ -211,6 +212,7 @@
       "tab": {
         "dashboard": "Dashboard",
         "workorders": "Work Orders",
+        "ratings": "Ratings",
         "logs": "Audit Logs",
         "guide": "Guide",
         "settings": "Settings",

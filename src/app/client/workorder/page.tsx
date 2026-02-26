@@ -80,8 +80,18 @@ export default function ClientWorkOrderPage() {
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-            <svg className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            <svg
+              className="h-8 w-8 text-red-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+              />
             </svg>
           </div>
           <p className="text-red-500 mb-4">{error || t("errors.notFound")}</p>
@@ -104,9 +114,11 @@ export default function ClientWorkOrderPage() {
       <header className="border-b bg-white shadow-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900 text-sm font-bold text-brand-500 shadow">
-              S
-            </div>
+            <img
+              src="/logo.svg"
+              alt="Starlight"
+              className="h-9 w-9 rounded-xl shadow"
+            />
             <div>
               <span className="font-semibold text-gray-900 text-sm">
                 {t("common.appName")}
@@ -170,8 +182,18 @@ export default function ClientWorkOrderPage() {
         <div className="rounded-2xl bg-amber-50 border-2 border-amber-200 shadow-sm mb-6 overflow-hidden">
           <div className="px-6 py-4 sm:px-8 border-b border-amber-200 bg-amber-100/50">
             <h3 className="text-sm font-semibold text-amber-800 flex items-center gap-2">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               {t("client.workorder.timeline")}
             </h3>
@@ -190,8 +212,18 @@ export default function ClientWorkOrderPage() {
               <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 sm:px-8 border-b border-gray-100">
                   <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    <svg
+                      className="h-4 w-4 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                      />
                     </svg>
                     {t("client.workorder.description")}
                   </h3>
@@ -208,8 +240,18 @@ export default function ClientWorkOrderPage() {
             <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-6 py-4 sm:px-8 border-b border-gray-100">
                 <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                  <svg
+                    className="h-4 w-4 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"
+                    />
                   </svg>
                   {t("client.workorder.comments")}
                 </h3>
@@ -230,8 +272,18 @@ export default function ClientWorkOrderPage() {
             <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100">
                 <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                  <svg
+                    className="h-4 w-4 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+                    />
                   </svg>
                   {t("client.workorder.orderInfo")}
                 </h3>
@@ -250,7 +302,9 @@ export default function ClientWorkOrderPage() {
                     <dt className="text-xs text-gray-400 uppercase tracking-wider">
                       {t("client.workorder.dueDate")}
                     </dt>
-                    <dd className={`text-sm font-medium ${isOverdue ? "text-red-600" : "text-gray-900"}`}>
+                    <dd
+                      className={`text-sm font-medium ${isOverdue ? "text-red-600" : "text-gray-900"}`}
+                    >
                       {order.dueDate
                         ? new Date(order.dueDate).toLocaleDateString(
                             locale === "zh" ? "zh-CN" : "en-US",
@@ -286,8 +340,18 @@ export default function ClientWorkOrderPage() {
             <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100">
                 <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                  <svg
+                    className="h-4 w-4 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                    />
                   </svg>
                   {t("client.workorder.contactInfo")}
                 </h3>
@@ -325,25 +389,27 @@ export default function ClientWorkOrderPage() {
             </div>
 
             {/* Rating Card - Show if completed and not yet rated */}
-            {orderIsTerminal && order.status === "COMPLETED" && !order.rating && (
-              <div className="rounded-2xl bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-200 shadow-sm overflow-hidden">
-                <div className="px-6 py-5 text-center">
-                  <p className="text-2xl mb-2">&#11088;</p>
-                  <h3 className="text-sm font-semibold text-amber-800 mb-1">
-                    {t("client.workorder.rating")}
-                  </h3>
-                  <p className="text-xs text-amber-600 mb-4">
-                    {t("client.workorder.ratingSubtitle")}
-                  </p>
-                  <a
-                    href={`/client/rate/${order.id}`}
-                    className="inline-block rounded-lg bg-amber-500 px-6 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 transition-colors shadow-sm"
-                  >
-                    {t("client.workorder.submitRating")}
-                  </a>
+            {orderIsTerminal &&
+              order.status === "COMPLETED" &&
+              !order.rating && (
+                <div className="rounded-2xl bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-200 shadow-sm overflow-hidden">
+                  <div className="px-6 py-5 text-center">
+                    <p className="text-2xl mb-2">&#11088;</p>
+                    <h3 className="text-sm font-semibold text-amber-800 mb-1">
+                      {t("client.workorder.rating")}
+                    </h3>
+                    <p className="text-xs text-amber-600 mb-4">
+                      {t("client.workorder.ratingSubtitle")}
+                    </p>
+                    <a
+                      href={`/client/rate/${order.id}`}
+                      className="inline-block rounded-lg bg-amber-500 px-6 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 transition-colors shadow-sm"
+                    >
+                      {t("client.workorder.submitRating")}
+                    </a>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Show existing rating */}
             {order.rating && (
@@ -384,9 +450,7 @@ export default function ClientWorkOrderPage() {
 
         {/* Footer */}
         <div className="mt-12 text-center">
-          <p className="text-xs text-gray-400">
-            {t("common.copyright")}
-          </p>
+          <p className="text-xs text-gray-400">{t("common.copyright")}</p>
         </div>
       </main>
     </div>

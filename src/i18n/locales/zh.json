@@ -115,6 +115,7 @@
       "statuses": "状态管理",
       "users": "用户管理",
       "syncFeishu": "飞书同步",
+      "ratings": "客户评价",
       "logs": "审计日志",
       "guide": "使用指南",
       "settings": "设置"
@@ -211,6 +212,7 @@
       "tab": {
         "dashboard": "仪表盘",
         "workorders": "工单管理",
+        "ratings": "客户评价",
         "logs": "审计日志",
         "guide": "使用指南",
         "settings": "设置",

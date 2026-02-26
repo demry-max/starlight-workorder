@@ -246,66 +246,52 @@ export default function AdminWorkOrderDetailPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Column - Details & Edit */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Status Update */}
+          {/* Status Update - Inline compact bar */}
           {nextStatuses.length > 0 && (
             <div className="card">
               <h3 className="text-sm font-medium text-gray-500 mb-3">
                 {t("admin.detail.updateStatus")}
               </h3>
-              <select
-                value={selectedStatus || ""}
-                onChange={(e) => setSelectedStatus(e.target.value || null)}
-                className="input-field mb-3"
-              >
-                <option value="">{t("admin.detail.selectStatus")}</option>
-                {nextStatuses.map((s) => (
-                  <option key={s} value={s}>
-                    {getLabel(s, locale)}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                value={statusNote}
-                onChange={(e) => setStatusNote(e.target.value)}
-                placeholder={t("admin.detail.statusNote")}
-                className="input-field"
-              />
-              {selectedStatus && (
-                <button
-                  onClick={() => handleStatusUpdate(selectedStatus)}
-                  disabled={updating}
-                  className="btn-primary mt-3 w-full"
-                >
-                  {updating ? t("common.loading") : t("common.save")}
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Unsaved changes bar */}
-          {isDirty && (
-            <div className="sticky top-16 z-10 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 shadow-sm">
-              <span className="text-sm font-medium text-amber-800">
-                {t("admin.detail.unsavedChanges")}
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleDiscard}
-                  className="btn-secondary text-sm"
-                >
-                  {t("admin.detail.discard")}
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="btn-primary text-sm"
-                >
-                  {saving ? t("common.loading") : t("common.save")}
-                </button>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="flex-1">
+                  <select
+                    value={selectedStatus || ""}
+                    onChange={(e) => setSelectedStatus(e.target.value || null)}
+                    className="input-field"
+                  >
+                    <option value="">{t("admin.detail.selectStatus")}</option>
+                    {nextStatuses.map((s) => (
+                      <option key={s} value={s}>
+                        {getLabel(s, locale)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={statusNote}
+                    onChange={(e) => setStatusNote(e.target.value)}
+                    placeholder={t("admin.detail.statusNote")}
+                    className="input-field"
+                  />
+                </div>
+                {selectedStatus && (
+                  <button
+                    onClick={() => handleStatusUpdate(selectedStatus)}
+                    disabled={updating}
+                    className="btn-secondary text-sm whitespace-nowrap"
+                  >
+                    {updating
+                      ? t("common.loading")
+                      : t("admin.detail.updateStatus")}
+                  </button>
+                )}
               </div>
             </div>
           )}
+
+          {/* Save bar - only shows when form fields are changed */}
           {saveMsg && (
             <div className="rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
               {saveMsg}
@@ -441,6 +427,22 @@ export default function AdminWorkOrderDetailPage() {
               placeholder={t("admin.workorderForm.description")}
             />
           </div>
+
+          {/* Single Save Button - only when fields changed */}
+          {isDirty && (
+            <div className="flex items-center justify-end gap-3">
+              <button onClick={handleDiscard} className="btn-secondary text-sm">
+                {t("admin.detail.discard")}
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="btn-primary text-sm"
+              >
+                {saving ? t("common.loading") : t("common.save")}
+              </button>
+            </div>
+          )}
 
           {/* Comments */}
           <div className="card">

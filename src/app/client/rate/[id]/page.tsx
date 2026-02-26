@@ -69,8 +69,18 @@ export default function RatingPage() {
       <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-amber-50 via-white to-yellow-50 px-4">
         <div className="w-full max-w-md text-center">
           <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-            <svg className="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            <svg
+              className="h-10 w-10 text-green-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4.5 12.75l6 6 9-13.5"
+              />
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
@@ -88,9 +98,7 @@ export default function RatingPage() {
               </svg>
             ))}
           </div>
-          <p className="mt-6 text-sm text-gray-500">
-            {t("common.copyright")}
-          </p>
+          <p className="mt-6 text-sm text-gray-500">{t("common.copyright")}</p>
         </div>
       </div>
     );
@@ -104,9 +112,11 @@ export default function RatingPage() {
 
       <div className="w-full max-w-lg">
         <div className="mb-8 text-center">
-          <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-900 text-xl font-bold text-brand-500 shadow-lg">
-            S
-          </div>
+          <img
+            src="/logo.svg"
+            alt="Starlight"
+            className="mb-4 inline-block h-14 w-14 rounded-2xl shadow-lg"
+          />
           <h1 className="text-2xl font-bold text-gray-900">
             {t("client.workorder.ratingTitle")}
           </h1>
@@ -148,7 +158,11 @@ export default function RatingPage() {
               {QUICK_COMMENT_KEYS.map((key) => {
                 const text = t(`client.workorder.quickComments.${key}`);
                 const isSelected = comment.includes(text);
-                const isPositive = ["excellent", "professional", "goodCommunication"].includes(key);
+                const isPositive = [
+                  "excellent",
+                  "professional",
+                  "goodCommunication",
+                ].includes(key);
                 return (
                   <button
                     key={key}
@@ -197,7 +211,9 @@ export default function RatingPage() {
             disabled={score === 0 || submitting}
             className="btn-primary w-full"
           >
-            {submitting ? t("common.loading") : t("client.workorder.submitRating")}
+            {submitting
+              ? t("common.loading")
+              : t("client.workorder.submitRating")}
           </button>
         </div>
 

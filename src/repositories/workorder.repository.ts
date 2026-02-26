@@ -17,6 +17,7 @@ const workorderInclude = {
   salesRep: { select: { id: true, name: true } },
   statusHistory: { orderBy: { createdAt: "asc" as const } },
   comments: { orderBy: { createdAt: "asc" as const } },
+  rating: true,
 };
 
 export const workorderRepository = {

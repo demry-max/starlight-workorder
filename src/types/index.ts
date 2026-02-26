@@ -1,4 +1,4 @@
-import { Priority, StaffRole, AuthorType } from '@prisma/client';
+import { Priority, StaffRole, AuthorType } from "@prisma/client";
 
 export { Priority, StaffRole, AuthorType };
 
@@ -10,8 +10,8 @@ export interface StatusConfig {
   key: string;
   labelEn: string;
   labelZh: string;
-  color: string;    // hex color for the dot
-  bgColor: string;  // hex background color
+  color: string; // hex color for the dot
+  bgColor: string; // hex background color
   textColor: string; // hex text color
   sortOrder: number;
   defaultProgress: number;
@@ -23,12 +23,12 @@ export interface StatusConfig {
 // Fallback STATUS_CONFIG for use when DB configs aren't loaded yet
 export const STATUS_CONFIG: Record<string, StatusConfig> = {
   DRAFT: {
-    key: 'DRAFT',
-    labelEn: 'Draft',
-    labelZh: '草稿',
-    color: '#6B7280',
-    bgColor: '#F3F4F6',
-    textColor: '#374151',
+    key: "DRAFT",
+    labelEn: "Draft",
+    labelZh: "草稿",
+    color: "#6B7280",
+    bgColor: "#F3F4F6",
+    textColor: "#374151",
     sortOrder: 0,
     defaultProgress: 0,
     isTerminal: false,
@@ -36,12 +36,12 @@ export const STATUS_CONFIG: Record<string, StatusConfig> = {
     isActive: true,
   },
   RECEIVED: {
-    key: 'RECEIVED',
-    labelEn: 'Received',
-    labelZh: '已接收',
-    color: '#3B82F6',
-    bgColor: '#DBEAFE',
-    textColor: '#1D4ED8',
+    key: "RECEIVED",
+    labelEn: "Received",
+    labelZh: "已接收",
+    color: "#3B82F6",
+    bgColor: "#DBEAFE",
+    textColor: "#1D4ED8",
     sortOrder: 1,
     defaultProgress: 5,
     isTerminal: false,
@@ -49,12 +49,12 @@ export const STATUS_CONFIG: Record<string, StatusConfig> = {
     isActive: true,
   },
   IN_PROGRESS: {
-    key: 'IN_PROGRESS',
-    labelEn: 'In Progress',
-    labelZh: '进行中',
-    color: '#F59E0B',
-    bgColor: '#FEF3C7',
-    textColor: '#92400E',
+    key: "IN_PROGRESS",
+    labelEn: "In Progress",
+    labelZh: "进行中",
+    color: "#F59E0B",
+    bgColor: "#FEF3C7",
+    textColor: "#92400E",
     sortOrder: 2,
     defaultProgress: 50,
     isTerminal: false,
@@ -62,12 +62,12 @@ export const STATUS_CONFIG: Record<string, StatusConfig> = {
     isActive: true,
   },
   WAITING_FOR_CLIENT: {
-    key: 'WAITING_FOR_CLIENT',
-    labelEn: 'Waiting for Client',
-    labelZh: '等待客户',
-    color: '#F97316',
-    bgColor: '#FFEDD5',
-    textColor: '#9A3412',
+    key: "WAITING_FOR_CLIENT",
+    labelEn: "Waiting for Client",
+    labelZh: "等待客户",
+    color: "#F97316",
+    bgColor: "#FFEDD5",
+    textColor: "#9A3412",
     sortOrder: 3,
     defaultProgress: -1,
     isTerminal: false,
@@ -75,12 +75,12 @@ export const STATUS_CONFIG: Record<string, StatusConfig> = {
     isActive: true,
   },
   WAITING_FOR_THIRD_PARTY: {
-    key: 'WAITING_FOR_THIRD_PARTY',
-    labelEn: 'Waiting for Third Party',
-    labelZh: '等待第三方',
-    color: '#8B5CF6',
-    bgColor: '#EDE9FE',
-    textColor: '#5B21B6',
+    key: "WAITING_FOR_THIRD_PARTY",
+    labelEn: "Waiting for Third Party",
+    labelZh: "等待第三方",
+    color: "#8B5CF6",
+    bgColor: "#EDE9FE",
+    textColor: "#5B21B6",
     sortOrder: 4,
     defaultProgress: -1,
     isTerminal: false,
@@ -88,12 +88,12 @@ export const STATUS_CONFIG: Record<string, StatusConfig> = {
     isActive: true,
   },
   COMPLETED: {
-    key: 'COMPLETED',
-    labelEn: 'Completed',
-    labelZh: '已完成',
-    color: '#10B981',
-    bgColor: '#D1FAE5',
-    textColor: '#065F46',
+    key: "COMPLETED",
+    labelEn: "Completed",
+    labelZh: "已完成",
+    color: "#10B981",
+    bgColor: "#D1FAE5",
+    textColor: "#065F46",
     sortOrder: 5,
     defaultProgress: 100,
     isTerminal: true,
@@ -101,12 +101,12 @@ export const STATUS_CONFIG: Record<string, StatusConfig> = {
     isActive: true,
   },
   CLOSED: {
-    key: 'CLOSED',
-    labelEn: 'Closed',
-    labelZh: '已关闭',
-    color: '#4B5563',
-    bgColor: '#E5E7EB',
-    textColor: '#1F2937',
+    key: "CLOSED",
+    labelEn: "Closed",
+    labelZh: "已关闭",
+    color: "#4B5563",
+    bgColor: "#E5E7EB",
+    textColor: "#1F2937",
     sortOrder: 6,
     defaultProgress: 100,
     isTerminal: true,
@@ -114,12 +114,12 @@ export const STATUS_CONFIG: Record<string, StatusConfig> = {
     isActive: true,
   },
   CANCELLED: {
-    key: 'CANCELLED',
-    labelEn: 'Cancelled',
-    labelZh: '已取消',
-    color: '#EF4444',
-    bgColor: '#FEE2E2',
-    textColor: '#991B1B',
+    key: "CANCELLED",
+    labelEn: "Cancelled",
+    labelZh: "已取消",
+    color: "#EF4444",
+    bgColor: "#FEE2E2",
+    textColor: "#991B1B",
     sortOrder: 7,
     defaultProgress: -1,
     isTerminal: true,
@@ -130,13 +130,13 @@ export const STATUS_CONFIG: Record<string, StatusConfig> = {
 
 // JWT payload types
 export interface ClientTokenPayload {
-  type: 'client';
+  type: "client";
   workOrderId: string;
   workorderNumber: string;
 }
 
 export interface AdminTokenPayload {
-  type: 'admin';
+  type: "admin";
   staffId: string;
   email: string;
   role: StaffRole;
@@ -199,7 +199,12 @@ export interface WorkOrderClientView {
     content: string;
     createdAt: string;
   }[];
+  rating: {
+    score: number;
+    comment: string | null;
+    createdAt: string;
+  } | null;
 }
 
 // Supported locales
-export type Locale = 'en' | 'zh';
+export type Locale = "en" | "zh";

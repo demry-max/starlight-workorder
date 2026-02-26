@@ -65,8 +65,8 @@
       "client": "客户",
       "company": "公司",
       "assignedTo": "负责人",
-      "description": "描述",
-      "dueDate": "截止日期",
+      "description": "服务内容",
+      "dueDate": "预计完成时间",
       "createdAt": "创建时间",
       "updatedAt": "最后更新",
       "timeline": "状态时间线",
@@ -76,7 +76,26 @@
       "submitComment": "发送评论",
       "noComments": "暂无评论。",
       "overdue": "已逾期",
-      "notSet": "未设置"
+      "notSet": "未设置",
+      "rating": "评价我们的服务",
+      "ratingTitle": "服务评价",
+      "ratingSubtitle": "您的体验如何？",
+      "ratingComment": "您的反馈",
+      "ratingCommentPlaceholder": "告诉我们更多关于您的体验...",
+      "submitRating": "提交评价",
+      "ratingSuccess": "感谢您的评价！",
+      "ratingAlreadySubmitted": "您已提交过评价。",
+      "quickComments": {
+        "excellent": "服务优秀，非常满意！",
+        "professional": "团队专业高效。",
+        "goodCommunication": "全程沟通良好。",
+        "slow": "响应速度有待提高。",
+        "unclearProcess": "流程有时不够清晰。",
+        "needsImprovement": "服务质量有待改进。"
+      },
+      "serviceInfo": "服务信息",
+      "orderInfo": "工单信息",
+      "contactInfo": "联系人与负责人"
     }
   },
   "admin": {
@@ -162,7 +181,10 @@
       "passwordResetSuccess": "密码重置成功。",
       "unsavedChanges": "有未保存的更改",
       "discard": "放弃更改",
-      "saveSuccess": "保存成功。"
+      "saveSuccess": "保存成功。",
+      "clientRating": "客户评价",
+      "noRating": "尚未提交评价",
+      "ratingStars": "星"
     },
     "users": {
       "title": "用户管理",
